@@ -1,0 +1,22 @@
+# data and experiment outputs (never commit)
+data/*
+!data/.gitkeep
+mlruns/
+mlartifacts/
+artifacts/
+*.onnx
+*.safetensors
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+.ruff_cache/
+
+# secrets and OS files
+.env
+.DS_Store
+Thumbs.db
+venv/
