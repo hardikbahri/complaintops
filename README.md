@@ -203,9 +203,31 @@ fire; same-distribution data stays quiet) and on the real batches (skipped if th
 Evidently 0.7.x does not import under pandas 3, so pandas is pinned below 3.
 
 ### Serving benchmark (Step 9)
-| Variant | Size (MB) | p50 ms | p95 ms | Macro-F1 |
-|---|---|---|---|---|
-| PyTorch fp32 | | | | |
-| ONNX fp32 | | | | |
-| ONNX int8 | | | | |
+The champion's LoRA adapter is merged into DistilBERT (`merge_and_unload()`), exported to ONNX and quantized to
+int8 (`python -m complaintops.export_onnx`); `python -m complaintops.benchmark_serving` measures it. Latency is
+end to end (tokenizing + model) on CPU for 500 validation complaints, one complaint per request and batches of
+16, with 2 threads (about what a small free host gives). Quality is weighted F1 on 3,000 validation complaints,
+with the champion's per-class offsets applied to every variant.
+
+| Variant | Size (MB) | Batch 1 p50 / p95 (ms) | Batch 16 p50 / p95 (ms) | Weighted F1 | Same class as PyTorch fp32 |
+|---|---|---|---|---|---|
+| PyTorch fp32 | 268 | 167 / 218 | 3073 / 3159 | 0.6689 | 100% |
+| ONNX fp32 | 268 | 97 / 134 | 2260 / 2322 | 0.6689 | 100% |
+| **ONNX int8** | **67** | **91 / 128** | **2183 / 2580** | 0.6662 | 92.4% |
+
+With the default thread count (6 cores) one complaint takes p50 / p95: PyTorch 177 / 256 ms, ONNX fp32
+73 / 111 ms, ONNX int8 60 / 80 ms.
+
+**Recommendation: serve ONNX int8.** It is 4x smaller and 1.8x (2 threads) to 3x (6 cores) faster than PyTorch
+at a cost of 0.003 weighted F1, which is within the noise of a 3,000-row sample, though it changes 7.6% of
+individual predictions. The F1 column is only for comparing variants: the offsets were tuned on validation, so
+it is not the model's score (test weighted F1 0.587, see the gate).
+
+Notes: the first export was wrong (logits off by up to 1.98 even though the classes matched) because the
+library builds its padding mask with Python control flow that the exporter freezes at the sample length; the
+export uses a hand-written forward pass, checked against the library model (identical) and the ONNX fp32 model
+(difference 0.00001). Dynamic int8 quantization computes activation scales per batch, so int8 probabilities move
+by up to about 0.04 depending on what else is in the batch (fp32 does not change at all); predicted classes stayed
+the same in the test. `complaintops.serve_onnx.predict(texts)` returns a label and a confidence per text and
+needs only ONNX Runtime and the tokenizer, not PyTorch. Models are in `data/onnx/` (not in git).
 
