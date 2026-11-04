@@ -101,6 +101,9 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-c
 .chip-btn { border: 1px solid var(--hair); background: var(--page); color: var(--ink2); padding: 7px 12px; border-radius: 999px; font: inherit; font-size: 13.5px; cursor: pointer; }
 .chip-btn:hover { border-color: var(--accent); color: var(--ink); }
 .count { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.check { flex: 1 1 100%; display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--ink2); }
+.check input { margin-top: 3px; }
+.check[hidden] { display: none; }
 .status { margin-top: 14px; font-size: 14px; color: var(--ink2); min-height: 0; }
 .status.warn { color: var(--warn-text); }
 .status:empty { display: none; }

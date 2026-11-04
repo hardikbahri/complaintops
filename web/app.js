@@ -447,7 +447,12 @@
     var foot = mode === "live"
       ? "Live run · LLM: " + (res.llm_provider || "n/a") + " · " + (res.total_ms || 0) + " ms end to end"
       : "Recorded run from " + D.generated + (res.llm_provider ? " · LLM: " + res.llm_provider : "") + " (the live service was not reachable)";
-    box.appendChild(h("p", { class: "result-foot", text: foot }));
+    var footEl = h("p", { class: "result-foot", text: foot });
+    if (res.trace_url && /^https:\/\//.test(res.trace_url)) {
+      footEl.appendChild(document.createTextNode(" · "));
+      footEl.appendChild(h("a", { href: res.trace_url, target: "_blank", rel: "noopener noreferrer", text: "Trace in Langfuse" }));
+    }
+    box.appendChild(footEl);
   }
 
   function setStatus(msg, warn) { var s = $("#demo-status"); s.textContent = msg || ""; s.className = "status" + (warn ? " warn" : ""); }
@@ -464,7 +469,7 @@
       var text = ta.value.trim();
       if (!text) { setStatus("Write or choose a complaint first.", true); ta.focus(); return; }
       go.disabled = true; setStatus("Running the agent…");
-      fetch(API + "/triage", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: text }) })
+      fetch(API + "/triage", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: text, trace: !$("#no-trace").checked }) })
         .then(function (r) {
           if (r.ok) return r.json();
           return r.json().catch(function () { return {}; }).then(function (b) { var e = new Error(b.detail || ("HTTP " + r.status)); e.status = r.status; throw e; });
@@ -478,6 +483,9 @@
         .then(function () { go.disabled = false; });
     });
     ta.value = EXAMPLES[0].text; upd();
+    fetch(API + "/model").then(function (r) { return r.ok ? r.json() : {}; }).then(function (m) {
+      if (m && m.tracing) $("#trace-opt").hidden = false;  // only offer the opt-out when the server really traces
+    }).catch(function () { /* the page works without it */ });
   }
 
   /* ---------- theme ---------- */

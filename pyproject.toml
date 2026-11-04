@@ -8,6 +8,7 @@ dependencies = [
     "accelerate>=1.15.0",
     "datasets>=5.1.0",
     "evidently>=0.7.23",
+    "langfuse>=4.18.0",
     "langgraph>=1.2.19",
     "matplotlib>=3.10.9",
     "mcp>=2.3.0",

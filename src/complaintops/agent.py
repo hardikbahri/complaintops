@@ -11,6 +11,7 @@ Flow:  classify -> (confidence >= THRESHOLD ? accept : search similar -> LLM cho
 import asyncio
 import json
 import os
+import contextvars
 import sys
 import time
 from typing import TypedDict
@@ -18,8 +19,10 @@ from typing import TypedDict
 from langgraph.graph import END, START, StateGraph
 from mcp import Client, StdioServerParameters
 
-from complaintops.llm import decide_label, get_llm
+from complaintops.llm import SYSTEM, build_prompt, decide_label, get_llm
+from complaintops.tracing import Trace, flush
 
+_TRACE = contextvars.ContextVar("trace", default=Trace())  # the current run's Langfuse trace (a no-op by default)
 THRESHOLD = 0.8  # from validation: at >= 0.8 the classifier is right 85% of the time and handles 43% of complaints
 
 
@@ -57,7 +60,10 @@ class ComplaintAgent:
         await self._client_cm.__aexit__(*exc)
 
     async def _tool(self, name, args):
-        return _payload(await self.client.call_tool(name, args))
+        with _TRACE.get().step(f"tool:{name}", input=args, metadata={"via": "MCP"}) as span:
+            out = _payload(await self.client.call_tool(name, args))
+            span.update(output=out)
+            return out
 
     # ---- graph nodes: each returns the parts of the state it changes ----
     async def classify(self, s: State):
@@ -86,7 +92,13 @@ class ComplaintAgent:
 
     async def ask_llm(self, s: State):
         t0 = time.perf_counter()
-        d = await asyncio.to_thread(decide_label, self.llm, s["text"], s["candidates"], s["similar"])
+        prompt = build_prompt(s["text"], s["candidates"], s["similar"])
+        with _TRACE.get().step("llm:choose-label", as_type="generation", model=self.llm.name,
+                               input=[{"role": "system", "content": SYSTEM}, {"role": "user", "content": prompt}],
+                               model_parameters={"temperature": 0}) as gen:
+            d = await asyncio.to_thread(decide_label, self.llm, s["text"], s["candidates"], s["similar"])
+            gen.update(output=d.pop("reply", None), metadata={"chosen": d["label"], "accepted": d["ok"],
+                                                              "confidence": d["confidence"], "reason": d["reason"]})
         return {"llm": d, "trace": s["trace"] + [{
             "step": "llm", "model": d["model"],
             "summary": f"chose {d['label']!r} ({d['confidence']}): {d['reason']}", "ms": _ms(t0)}]}
@@ -131,11 +143,29 @@ class ComplaintAgent:
             g.add_edge(end, END)
         return g.compile()
 
-    async def run(self, text: str) -> dict:
-        state = await self.graph.ainvoke({"text": text, "trace": []})
-        return {"final": state["final"], "trace": state["trace"], "classification": state["classification"],
-                "similar": state.get("similar", []), "candidates": state.get("candidates", []),
-                "llm": state.get("llm")}
+    async def run(self, text: str, trace: bool = True) -> dict:
+        """Run the agent on one complaint. trace=False keeps this run out of Langfuse even if tracing is configured."""
+        tr = Trace.start("triage", input={"text": text}, enabled=trace,
+                         metadata={"threshold": self.threshold, "llm": self.llm.name})
+        token = _TRACE.set(tr)
+        try:
+            state = await self.graph.ainvoke({"text": text, "trace": []})
+        except BaseException as e:
+            tr.update(level="ERROR", status_message=f"{type(e).__name__}: {e}"[:300])
+            tr.end()
+            raise
+        finally:
+            _TRACE.reset(token)
+        out = {"final": state["final"], "trace": state["trace"], "classification": state["classification"],
+               "similar": state.get("similar", []), "candidates": state.get("candidates", []),
+               "llm": state.get("llm"), "trace_id": None, "trace_url": None}
+        if tr.active:
+            tr.update(output=state["final"], metadata={"source": state["final"]["source"], "threshold": self.threshold,
+                                                       "llm": self.llm.name})
+            tr.end()
+            out["trace_id"], out["trace_url"] = tr.trace_id, await asyncio.to_thread(tr.url)
+            asyncio.get_running_loop().run_in_executor(None, flush)  # deliver in the background; the response is not held up
+        return out
 
 
 def build_candidates(alternatives, similar):

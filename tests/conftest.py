@@ -2,3 +2,4 @@
 import os
 
 os.environ["LLM_PROVIDER"] = "mock"  # set before any app starts; config.load_env() never overrides real variables
+os.environ["LANGFUSE_TRACING"] = "off"  # the API loads .env, which holds real keys; tracing tests switch it on with a fake client

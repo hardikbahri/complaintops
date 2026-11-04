@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from complaintops.config import load_env
 from complaintops.serve_onnx import Classifier
+from complaintops.tracing import configured as tracing_configured
 
 MODEL_NAME = os.environ.get("MODEL_NAME", "complaint-classifier v4 (DistilBERT + LoRA, ONNX int8)")
 MAX_TEXTS = 32
@@ -63,6 +64,7 @@ class PredictResponse(BaseModel):
 
 class TriageRequest(BaseModel):
     text: str = Field(min_length=1, max_length=TRIAGE_MAX_CHARS, description="one complaint")
+    trace: bool = Field(True, description="false keeps this run out of Langfuse even when tracing is configured")
 
     @field_validator("text")
     @classmethod
@@ -139,7 +141,8 @@ def model_info(request: Request):
     clf = request.app.state.clf
     agent = request.app.state.agent
     return {"model": MODEL_NAME, "n_classes": len(clf.classes), "classes": clf.classes,
-            "llm": agent.llm.name if agent else None, "agent_threshold": agent.threshold if agent else None}
+            "llm": agent.llm.name if agent else None, "agent_threshold": agent.threshold if agent else None,
+            "tracing": tracing_configured()}
 
 
 @app.post("/predict", response_model=PredictResponse)
@@ -165,7 +168,7 @@ async def triage(req: TriageRequest, request: Request):
     s.limiter.check(fwd or (request.client.host if request.client else "unknown"))
     t0 = time.perf_counter()
     async with s.slots:
-        result = await s.agent.run(req.text)
+        result = await s.agent.run(req.text, trace=req.trace)
     return {"mode": "live", "llm_provider": s.agent.llm.name, "threshold": s.agent.threshold,
             "total_ms": round((time.perf_counter() - t0) * 1000), **result}
 

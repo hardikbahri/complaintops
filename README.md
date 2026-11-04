@@ -51,6 +51,18 @@ complaints and asks an LLM to pick among at most five candidate labels (the clas
 that two of the five similar complaints share), and queues the case for a human if the LLM cannot decide. An LLM
 answer is accepted only if it is one of the candidates, so text planted in a complaint cannot make it invent a label.
 
+**Tracing (Langfuse).** With `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` and `LANGFUSE_BASE_URL` set in `.env`,
+each `/triage` run is recorded as one Langfuse trace (`complaintops.tracing`): a root span `triage`, a span per tool
+call made through MCP (`tool:classify_complaint`, `tool:search_similar_complaints`, `tool:flag_for_review`) and a
+generation `llm:choose-label` holding the model name, the exact prompt and the raw reply, all with timings. The
+response carries `trace_id` and `trace_url`, and the page links to it. Tracing does nothing without keys and cannot
+break a request (every call swallows its own errors). Because the run's text is sent to Langfuse's cloud, the page
+shows an opt-out checkbox whenever the server traces (the API takes `trace=false`), and a public deployment should
+leave the keys unset. A trace is private to the Langfuse project, so a reader needs access or a shared link.
+The first real trace paid for itself: it showed the similarity search taking 18 s on the first request after a start
+(the embedding model loading), so the tool server now loads its models in the background at start-up; the same
+request takes about 3 s end to end. `tests/test_tracing.py` checks the recorded structure with a fake client.
+
 **Does the LLM help?** Not in the tests so far. `python -m complaintops.evaluate_agent` asks the LLM
 (`openai/gpt-oss-120b`) to choose among at most five candidate labels for 150 random validation complaints below the
 threshold, with the true label hidden:

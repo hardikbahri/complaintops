@@ -23,6 +23,21 @@ def _clf():
     return _classifier
 
 
+def warm_up():
+    """Load the classifier and the embedding model now, so the first real request is not slow (a trace showed the
+    search step taking 18 s on a cold start). Failures are ignored: a tool still loads what it needs on first use."""
+    try:
+        _clf().predict(["warm up"])
+    except Exception:
+        pass
+    try:
+        from complaintops.vector_store import embed
+
+        embed(["warm up"])
+    except Exception:
+        pass
+
+
 def _check_text(text):
     if not isinstance(text, str) or not text.strip():
         raise ValueError("text must be a non-empty string")

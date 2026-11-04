@@ -4,6 +4,8 @@ Any MCP client can connect: our LangGraph agent, Claude Desktop, an IDE. Run ove
     python -m complaintops.mcp_server
 The tool docstrings below are what the LLM reads when it decides which tool to call, so they say when to use each.
 """
+import threading
+
 from mcp.server.mcpserver import MCPServer
 
 from complaintops import tools
@@ -46,6 +48,7 @@ def flag_for_review(text: str, reason: str, predicted_label: str | None = None,
 
 
 def main():
+    threading.Thread(target=tools.warm_up, daemon=True).start()  # load the models while the client connects
     mcp.run()  # stdio
 
 

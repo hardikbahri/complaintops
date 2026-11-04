@@ -95,12 +95,13 @@ def build_prompt(complaint, candidates, similar):
 
 def decide_label(llm, complaint, candidates, similar=()):
     """Ask the LLM to pick one of `candidates`. Returns {label (or None), confidence, reason, model, ok}."""
-    out = {"label": None, "confidence": "low", "reason": "", "model": llm.name, "ok": False}
+    out = {"label": None, "confidence": "low", "reason": "", "model": llm.name, "ok": False, "reply": None}
     try:
         reply = llm.complete(SYSTEM, build_prompt(complaint, candidates, list(similar)))
     except Exception as e:  # network down, rate limit, bad key...: the caller falls back to a human
         out["reason"] = f"LLM call failed: {type(e).__name__}"
         return out
+    out["reply"] = reply
     obj = parse_json(reply)
     if obj is None:
         out["reason"] = "LLM reply was not valid JSON"
