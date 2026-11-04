@@ -1,0 +1,989 @@
+{
+ "generated": "2026-11-04",
+ "facts": {
+  "complaints": 335499,
+  "train": 234849,
+  "validation": 50325,
+  "test": 50325,
+  "classes": 24,
+  "classes_original": 26,
+  "train_dates": "2015-03 to 2023-02",
+  "validation_dates": "2023-02 to 2023-09",
+  "test_dates": "2023-09 to 2024-05",
+  "tests": 72,
+  "mlflow_runs": 31
+ },
+ "models_validation": [
+  {
+   "name": "TF-IDF + logistic regression",
+   "weighted_f1": 0.6047002082728956,
+   "macro_f1": 0.47168394815463893,
+   "note": "the baseline"
+  },
+  {
+   "name": "XGBoost (Optuna-tuned)",
+   "weighted_f1": 0.59,
+   "macro_f1": 0.4543,
+   "note": "did not beat the baseline"
+  },
+  {
+   "name": "DistilBERT + LoRA, 60k rows",
+   "weighted_f1": 0.6108144747586736,
+   "macro_f1": 0.45892615554045346,
+   "note": "a quarter of the data"
+  },
+  {
+   "name": "DistilBERT + LoRA, all rows",
+   "weighted_f1": 0.6432653788250959,
+   "macro_f1": 0.5240985457586956,
+   "note": "rank 16, 3 epochs"
+  },
+  {
+   "name": "LoRA + per-class offsets (champion)",
+   "weighted_f1": 0.6515116789009383,
+   "macro_f1": 0.53658433763539,
+   "note": "offsets tuned on other validation rows (cross-fitted)"
+  }
+ ],
+ "product_task": {
+  "weighted_f1": 0.89,
+  "macro_f1": 0.6295893361697724,
+  "accuracy": 0.8759860904123199,
+  "classes": 10
+ },
+ "gates": {
+  "blocked": {
+   "champion": {
+    "weighted_f1": 0.5310337604152597,
+    "ci95": [
+     0.5265623070956275,
+     0.5355899651095393
+    ]
+   },
+   "candidate": {
+    "weighted_f1": 0.501595448593889,
+    "ci95": [
+     0.4970054854840093,
+     0.5062654843535159
+    ]
+   },
+   "difference": {
+    "point": -0.02943831182137069,
+    "ci95": [
+     -0.0325066981875053,
+     -0.026232322751248715
+    ]
+   },
+   "checks": [
+    {
+     "name": "lower bound of the difference",
+     "passed": false,
+     "detail": "95% lower bound of (candidate - champion) = -0.0325 must be >= -0.005"
+    },
+    {
+     "name": "class recall floor",
+     "passed": false,
+     "detail": "lowest class recall 0.087 (floor 0.1); below floor: [('Debt collection | Written notification about debt', 0.08703703703703704)]"
+    },
+    {
+     "name": "golden set",
+     "passed": false,
+     "detail": "34/40 golden cases kept; regressions at rows [6, 13, 16, 23, 37, 39]"
+    }
+   ],
+   "passed": false
+  },
+  "promoted": {
+   "champion": {
+    "weighted_f1": 0.5310337604152597,
+    "ci95": [
+     0.5265623070956275,
+     0.5355899651095393
+    ]
+   },
+   "candidate": {
+    "weighted_f1": 0.5770677999920496,
+    "ci95": [
+     0.5724209355336285,
+     0.5817297589896682
+    ]
+   },
+   "difference": {
+    "point": 0.046034039576789865,
+    "ci95": [
+     0.04243078818663501,
+     0.049761500288703714
+    ]
+   },
+   "checks": [
+    {
+     "name": "lower bound of the difference",
+     "passed": true,
+     "detail": "95% lower bound of (candidate - champion) = +0.0424 must be >= -0.005"
+    },
+    {
+     "name": "class recall floor",
+     "passed": true,
+     "detail": "lowest class recall 0.136 (floor 0.1); no class below floor"
+    },
+    {
+     "name": "golden set",
+     "passed": true,
+     "detail": "40/40 golden cases kept; regressions at rows []"
+    }
+   ],
+   "passed": true
+  },
+  "refinement": {
+   "champion": {
+    "weighted_f1": 0.5770677999920496,
+    "ci95": [
+     0.5724209355336285,
+     0.5817297589896682
+    ]
+   },
+   "candidate": {
+    "weighted_f1": 0.5869485103155467,
+    "ci95": [
+     0.5824071574236798,
+     0.5914481356877199
+    ]
+   },
+   "difference": {
+    "point": 0.009880710323497133,
+    "ci95": [
+     0.007936922691023298,
+     0.011693275895834696
+    ]
+   },
+   "checks": [
+    {
+     "name": "lower bound of the difference",
+     "passed": true,
+     "detail": "95% lower bound of (candidate - champion) = +0.0079 must be >= -0.005"
+    },
+    {
+     "name": "must clearly improve",
+     "passed": true,
+     "detail": "95% lower bound of the difference +0.0079 must be > 0"
+    },
+    {
+     "name": "class recall floor",
+     "passed": true,
+     "detail": "lowest class recall 0.101 (floor 0.1); no class below floor"
+    },
+    {
+     "name": "golden set",
+     "passed": true,
+     "detail": "40/40 golden cases kept; regressions at rows []"
+    }
+   ],
+   "passed": true
+  }
+ },
+ "taxonomy": {
+  "n_classes": 24,
+  "merged_label": "Credit reporting | Dispute, accuracy or use of report",
+  "validation": [
+   {
+    "name": "TF-IDF + logistic regression",
+    "weighted_f1": 0.8123573841230302,
+    "macro_f1": 0.4825617321814195,
+    "accuracy": 0.8091405861897665,
+    "note": "the baseline"
+   },
+   {
+    "name": "DistilBERT + LoRA, 60k rows",
+    "weighted_f1": 0.8244414321239527,
+    "macro_f1": 0.46051156676815275,
+    "accuracy": 0.8267064083457526,
+    "note": "a quarter of the data"
+   },
+   {
+    "name": "DistilBERT + LoRA, all rows",
+    "weighted_f1": 0.8422727120890948,
+    "macro_f1": 0.5288591881930337,
+    "accuracy": 0.8428812717337307,
+    "note": "rank 16, 3 epochs"
+   },
+   {
+    "name": "LoRA + per-class offsets (champion)",
+    "weighted_f1": 0.8536382458881336,
+    "macro_f1": 0.545570152303966,
+    "accuracy": 0.85826130153999,
+    "note": "the offsets were tuned on these validation rows"
+   }
+  ],
+  "test": [
+   {
+    "name": "TF-IDF baseline (champion v1)",
+    "weighted_f1": 0.7762621345517742,
+    "ci95": [
+     0.772368159975157,
+     0.7799101830705618
+    ],
+    "macro_f1": 0.48510852935301285,
+    "accuracy": 0.7817784401390959
+   },
+   {
+    "name": "LoRA, all training rows",
+    "weighted_f1": 0.8088232898396649,
+    "ci95": [
+     0.8052594448876563,
+     0.8125524034601793
+    ],
+    "macro_f1": 0.5266118243679196,
+    "accuracy": 0.8166517635370094
+   },
+   {
+    "name": "LoRA + class offsets (champion v4)",
+    "weighted_f1": 0.8172948504321452,
+    "ci95": [
+     0.8138344510721897,
+     0.8209850492286885
+    ],
+    "macro_f1": 0.5328152682246938,
+    "accuracy": 0.8294485842026825
+   }
+  ],
+  "champion_gain_over_baseline": {
+   "point": 0.04103271588037105,
+   "ci95": [
+    0.03794259390410548,
+    0.04386366618134691
+   ]
+  },
+  "trio": {
+   "rows": 37150,
+   "share_of_val": 0.7382016890213612,
+   "exactly_right": 0.6966890982503364,
+   "swapped_with_a_sibling": 0.268021534320323,
+   "predicted_outside_trio": 0.03528936742934051
+  }
+ },
+ "calibration": {
+  "bins": [
+   {
+    "lo": 0,
+    "hi": 0.3,
+    "share": 0.011624441132637855,
+    "accuracy": 0.31794871794871793
+   },
+   {
+    "lo": 0.3,
+    "hi": 0.4,
+    "share": 0.03252856433184302,
+    "accuracy": 0.36896762370189373
+   },
+   {
+    "lo": 0.4,
+    "hi": 0.5,
+    "share": 0.05047193243914556,
+    "accuracy": 0.44448818897637793
+   },
+   {
+    "lo": 0.5,
+    "hi": 0.6,
+    "share": 0.05706905116741182,
+    "accuracy": 0.5243732590529248
+   },
+   {
+    "lo": 0.6,
+    "hi": 0.7,
+    "share": 0.05339294585196225,
+    "accuracy": 0.6356531447711202
+   },
+   {
+    "lo": 0.7,
+    "hi": 0.8,
+    "share": 0.05466467958271237,
+    "accuracy": 0.7288258814976373
+   },
+   {
+    "lo": 0.8,
+    "hi": 0.9,
+    "share": 0.07064083457526081,
+    "accuracy": 0.8475386779184247
+   },
+   {
+    "lo": 0.9,
+    "hi": 1.0,
+    "share": 0.6696075509190264,
+    "accuracy": 0.9805032939640335
+   }
+  ],
+  "thresholds": [
+   {
+    "t": 0.5,
+    "handled": 0.9053750620963735,
+    "accuracy": 0.9058446546539956,
+    "rest_accuracy": 0.4029819403611928
+   },
+   {
+    "t": 0.6,
+    "handled": 0.8483060109289617,
+    "accuracy": 0.9315078119509967,
+    "rest_accuracy": 0.44865077285826566
+   },
+   {
+    "t": 0.7,
+    "handled": 0.7949130650769995,
+    "accuracy": 0.9513798620137986,
+    "rest_accuracy": 0.4973355295029551
+   },
+   {
+    "t": 0.8,
+    "handled": 0.7402483854942872,
+    "accuracy": 0.9678146726438139,
+    "rest_accuracy": 0.5460526315789473
+   },
+   {
+    "t": 0.9,
+    "handled": 0.6696075509190264,
+    "accuracy": 0.9805032939640335,
+    "rest_accuracy": 0.6105130209899561
+   }
+  ],
+  "unsure_share": 0.2597516145057129,
+  "unsure_top1": 0.5460526315789473,
+  "unsure_top3": 0.8682680538555692,
+  "credit_reporting_share": 0.7472826626924988
+ },
+ "calibration_26": {
+  "bins": [
+   {
+    "lo": 0,
+    "hi": 0.3,
+    "share": 0.02330849478390462,
+    "accuracy": 0.2608695652173913
+   },
+   {
+    "lo": 0.3,
+    "hi": 0.4,
+    "share": 0.05772478887232985,
+    "accuracy": 0.34010327022375214
+   },
+   {
+    "lo": 0.4,
+    "hi": 0.5,
+    "share": 0.1068455042225534,
+    "accuracy": 0.4247721777943091
+   },
+   {
+    "lo": 0.5,
+    "hi": 0.6,
+    "share": 0.14046696472925982,
+    "accuracy": 0.49540246145140754
+   },
+   {
+    "lo": 0.6,
+    "hi": 0.7,
+    "share": 0.12250372578241431,
+    "accuracy": 0.5735604217356042
+   },
+   {
+    "lo": 0.7,
+    "hi": 0.8,
+    "share": 0.11656234475906607,
+    "accuracy": 0.6513808387316741
+   },
+   {
+    "lo": 0.8,
+    "hi": 0.9,
+    "share": 0.1319225037257824,
+    "accuracy": 0.7358035848772405
+   },
+   {
+    "lo": 0.9,
+    "hi": 1.0,
+    "share": 0.3006656731246895,
+    "accuracy": 0.9043685149692684
+   }
+  ],
+  "thresholds": [
+   {
+    "t": 0.5,
+    "handled": 0.8121212121212121,
+    "accuracy": 0.7200391485196966,
+    "rest_accuracy": 0.3784241142252776
+   },
+   {
+    "t": 0.6,
+    "handled": 0.6716542473919523,
+    "accuracy": 0.76701872725659,
+    "rest_accuracy": 0.42846768336964414
+   },
+   {
+    "t": 0.7,
+    "handled": 0.549150521609538,
+    "accuracy": 0.8101751338833406,
+    "rest_accuracy": 0.46789193001013707
+   },
+   {
+    "t": 0.8,
+    "handled": 0.4325881768504719,
+    "accuracy": 0.8529627928341754,
+    "rest_accuracy": 0.5055857117842759
+   },
+   {
+    "t": 0.9,
+    "handled": 0.3006656731246895,
+    "accuracy": 0.9043685149692684,
+    "rest_accuracy": 0.5490140364834915
+   }
+  ],
+  "unsure_share": 0.5674118231495281,
+  "unsure_top1": 0.5055857117842759,
+  "unsure_top3": 0.890597093328664,
+  "credit_reporting_share": 0.7472826626924988
+ },
+ "serving": {
+  "latency": {
+   "2 threads | PyTorch fp32": {
+    "size_mb": 267.906392,
+    "bs1": {
+     "p50_ms": 167.3097999955644,
+     "p95_ms": 218.3973699997295,
+     "n_batches": 500
+    },
+    "bs16": {
+     "p50_ms": 3072.970399996848,
+     "p95_ms": 3158.79054999823,
+     "n_batches": 31
+    }
+   },
+   "2 threads | ONNX fp32": {
+    "size_mb": 267.98319,
+    "bs1": {
+     "p50_ms": 96.99769999861019,
+     "p95_ms": 134.2135150094691,
+     "n_batches": 500
+    },
+    "bs16": {
+     "p50_ms": 2259.967799996957,
+     "p95_ms": 2322.3927000071853,
+     "n_batches": 31
+    }
+   },
+   "2 threads | ONNX int8": {
+    "size_mb": 67.329304,
+    "bs1": {
+     "p50_ms": 91.49905000231229,
+     "p95_ms": 128.36104999078088,
+     "n_batches": 500
+    },
+    "bs16": {
+     "p50_ms": 2182.8612000099383,
+     "p95_ms": 2579.6269999991637,
+     "n_batches": 31
+    }
+   },
+   "default threads | PyTorch fp32": {
+    "size_mb": 267.906392,
+    "bs1": {
+     "p50_ms": 176.81900000025053,
+     "p95_ms": 256.39407000053325,
+     "n_batches": 500
+    },
+    "bs16": {
+     "p50_ms": 3169.715299998643,
+     "p95_ms": 3455.176500006928,
+     "n_batches": 31
+    }
+   },
+   "default threads | ONNX fp32": {
+    "size_mb": 267.98319,
+    "bs1": {
+     "p50_ms": 72.93100000242703,
+     "p95_ms": 110.91160000287346,
+     "n_batches": 500
+    },
+    "bs16": {
+     "p50_ms": 1498.5200999944936,
+     "p95_ms": 1550.3896999944118,
+     "n_batches": 31
+    }
+   },
+   "default threads | ONNX int8": {
+    "size_mb": 67.329304,
+    "bs1": {
+     "p50_ms": 60.35485000757035,
+     "p95_ms": 80.46870000252966,
+     "n_batches": 500
+    },
+    "bs16": {
+     "p50_ms": 1232.464799992158,
+     "p95_ms": 1261.3845499945455,
+     "n_batches": 31
+    }
+   }
+  },
+  "quality": {
+   "PyTorch fp32": {
+    "weighted_f1": 0.6688902024232415,
+    "agreement_with_pytorch": 1.0
+   },
+   "ONNX fp32": {
+    "weighted_f1": 0.6688902024232415,
+    "agreement_with_pytorch": 1.0
+   },
+   "ONNX int8": {
+    "weighted_f1": 0.6661846335526298,
+    "agreement_with_pytorch": 0.9236666666666666
+   }
+  },
+  "n_latency": 500,
+  "n_quality": 3000
+ },
+ "drift": {
+  "normal": {
+   "status": "ok",
+   "alerts": [],
+   "warnings": [],
+   "metrics": {
+    "psi_n_chars": 0.0009364426567542843,
+    "psi_n_words": 0.0023041672262698364,
+    "psi_n_xxxx": 0.003121466773874685,
+    "psi_n_dollar": 0.0005727498392105587,
+    "psi_conf": 0.0024808493661473323,
+    "psi_pred": 0.003943388901384819,
+    "mean_confidence_ref": 0.7190575003623962,
+    "mean_confidence_cur": 0.7252886295318604,
+    "text_auc": 0.5091578333333333,
+    "evidently_drifted_share": 0.0
+   },
+   "n_rows": 5000
+  },
+  "shift_time": {
+   "status": "alert",
+   "alerts": [
+    "text domain-classifier AUC 0.75 (alert at 0.7)"
+   ],
+   "warnings": [
+    "PSI 0.12 on prediction confidence (watch at 0.1)"
+   ],
+   "metrics": {
+    "psi_n_chars": 0.053094741400044165,
+    "psi_n_words": 0.056499335879773856,
+    "psi_n_xxxx": 0.0903877917651699,
+    "psi_n_dollar": 0.008527172666232036,
+    "psi_conf": 0.12177361982793831,
+    "psi_pred": 0.03619320494043309,
+    "mean_confidence_ref": 0.7190575003623962,
+    "mean_confidence_cur": 0.6624082326889038,
+    "text_auc": 0.7523033439835763,
+    "evidently_drifted_share": 0.42857142857142855
+   },
+   "n_rows": 2630
+  },
+  "shift_mix": {
+   "status": "alert",
+   "alerts": [
+    "PSI 1.41 on class mix (predicted labels) (alert at 0.25)",
+    "text domain-classifier AUC 0.80 (alert at 0.7)",
+    "Evidently: 57% of columns drifted (alert at 50%)"
+   ],
+   "warnings": [
+    "PSI 0.12 on text statistic n_xxxx (watch at 0.1)",
+    "PSI 0.23 on prediction confidence (watch at 0.1)"
+   ],
+   "metrics": {
+    "psi_n_chars": 0.02508132298308252,
+    "psi_n_words": 0.024818678248164635,
+    "psi_n_xxxx": 0.11755100474173659,
+    "psi_n_dollar": 0.042176360939449,
+    "psi_conf": 0.22867985014891706,
+    "psi_pred": 1.408613362923206,
+    "mean_confidence_ref": 0.7190575003623962,
+    "mean_confidence_cur": 0.6449910402297974,
+    "text_auc": 0.8041485,
+    "evidently_drifted_share": 0.5714285714285714
+   },
+   "n_rows": 5000
+  }
+ },
+ "agent_eval": {
+  "model": "openai/gpt-oss-120b",
+  "n": 150,
+  "threshold": 0.8,
+  "classifier_top1": 0.4666666666666667,
+  "in_candidates": 0.8466666666666667,
+  "llm_coverage": 0.5066666666666667,
+  "llm_accuracy_when_answered": 0.39473684210526316,
+  "classifier_accuracy_on_answered": 0.4342105263157895,
+  "agree_with_classifier": 0.5263157894736842,
+  "llm_only_right": 9,
+  "classifier_only_right": 12,
+  "sign_test_p": 0.6636238098144531,
+  "llm_says_high": 0.9868421052631579,
+  "answered": 76
+ },
+ "pipeline_eval": {
+  "classifier alone": {
+   "weighted_f1": 0.8428135863987971,
+   "accuracy": 0.8376406689849318,
+   "weighted_f1_ci95": [
+    0.8236273740617551,
+    0.8646540382742269
+   ],
+   "accuracy_ci95": [
+    0.8185922172545128,
+    0.8584640900811398
+   ]
+  },
+  "pipeline, automated answers only": {
+   "weighted_f1": 0.8773044794524555,
+   "accuracy": 0.8813080212756457,
+   "coverage": 0.8718558701771817,
+   "weighted_f1_ci95": [
+    0.8582512945505397,
+    0.8980492913079823
+   ],
+   "accuracy_ci95": [
+    0.8613296316171507,
+    0.9015974897016146
+   ]
+  },
+  "pipeline, humans assumed correct": {
+   "weighted_f1": 0.8963860970500978,
+   "accuracy": 0.8965177016062267,
+   "weighted_f1_ci95": [
+    0.876860885544016,
+    0.9160292765913263
+   ],
+   "accuracy_ci95": [
+    0.8774692498758078,
+    0.9155661533366459
+   ]
+  },
+  "pipeline, humans counted wrong": {
+   "weighted_f1": 0.7963420374940113,
+   "accuracy": 0.7683735717834081,
+   "weighted_f1_ci95": [
+    0.7787574319109909,
+    0.8128431163388055
+   ],
+   "accuracy_ci95": [
+    0.7527884749130652,
+    0.7874220235138268
+   ]
+  },
+  "classifier alone, same answered complaints": {
+   "weighted_f1": 0.8869806683126275,
+   "accuracy": 0.887266611987501,
+   "weighted_f1_ci95": [
+    0.8664372124711751,
+    0.9080097970841124
+   ],
+   "accuracy_ci95": [
+    0.8672634996716709,
+    0.906956673273909
+   ]
+  },
+  "_paired_automated_vs_classifier_same_complaints": {
+   "point": -0.009676188860171964,
+   "ci95": [
+    -0.02709193505833885,
+    0.007995347505324737
+   ]
+  },
+  "_meta": {
+   "split": "validation",
+   "threshold": 0.8,
+   "n_validation": 50325,
+   "n_unsure": 13072,
+   "n_llm_sample": 150,
+   "n_bootstrap": 1000
+  }
+ },
+ "recorded_runs": [
+  {
+   "label": "Confident case",
+   "text": "A collector keeps calling me about a debt that is not mine.",
+   "mode": "recorded",
+   "llm_provider": "openai/gpt-oss-120b",
+   "threshold": 0.8,
+   "final": {
+    "source": "classifier",
+    "label": "Debt collection | Attempts to collect debt not owed",
+    "product": "Debt collection",
+    "issue": "Attempts to collect debt not owed",
+    "classifier_label": "Debt collection | Attempts to collect debt not owed",
+    "classifier_confidence": 0.8405,
+    "reason": "confidence 0.84 is at or above 0.8"
+   },
+   "trace": [
+    {
+     "step": "classify",
+     "tool": "classify_complaint",
+     "model": "DistilBERT+LoRA (ONNX int8)",
+     "summary": "Debt collection | Attempts to collect debt not owed at confidence 0.84",
+     "ms": 463
+    },
+    {
+     "step": "accept",
+     "summary": "classifier answer accepted",
+     "ms": 0
+    }
+   ],
+   "classification": {
+    "label": "Debt collection | Attempts to collect debt not owed",
+    "product": "Debt collection",
+    "issue": "Attempts to collect debt not owed",
+    "confidence": 0.8405,
+    "alternatives": [
+     {
+      "label": "Debt collection | Attempts to collect debt not owed",
+      "confidence": 0.8405
+     },
+     {
+      "label": "Debt collection | False statements or representation",
+      "confidence": 0.0408
+     },
+     {
+      "label": "Other",
+      "confidence": 0.0352
+     }
+    ]
+   },
+   "similar": [],
+   "candidates": [],
+   "llm": null
+  },
+  {
+   "label": "Unsure case",
+   "text": "I was charged an overdraft fee even though I had enough money in my account.",
+   "mode": "recorded",
+   "llm_provider": "openai/gpt-oss-120b",
+   "threshold": 0.8,
+   "final": {
+    "source": "llm",
+    "label": "Checking or savings account | Managing an account",
+    "product": "Checking or savings account",
+    "issue": "Managing an account",
+    "classifier_label": "Other",
+    "classifier_confidence": 0.4887,
+    "reason": "The complaint is about an overdraft fee despite sufficient funds, matching prior examples labeled as Managing an account.",
+    "llm_confidence": "high"
+   },
+   "trace": [
+    {
+     "step": "classify",
+     "tool": "classify_complaint",
+     "model": "DistilBERT+LoRA (ONNX int8)",
+     "summary": "Other at confidence 0.49",
+     "ms": 17
+    },
+    {
+     "step": "search",
+     "tool": "search_similar_complaints",
+     "summary": "5 similar complaints; candidates: ['Other', 'Checking or savings account | Managing an account', 'Checking or savings account | Problem with a lender or other company charging your account']",
+     "ms": 13147
+    },
+    {
+     "step": "llm",
+     "model": "openai/gpt-oss-120b",
+     "summary": "chose 'Checking or savings account | Managing an account' (high): The complaint is about an overdraft fee despite sufficient funds, matching prior examples labeled as Managing an account.",
+     "ms": 32880
+    },
+    {
+     "step": "accept",
+     "summary": "LLM answer accepted",
+     "ms": 0
+    }
+   ],
+   "classification": {
+    "label": "Other",
+    "product": "Other",
+    "issue": "(no specific issue)",
+    "confidence": 0.4887,
+    "alternatives": [
+     {
+      "label": "Other",
+      "confidence": 0.4887
+     },
+     {
+      "label": "Checking or savings account | Managing an account",
+      "confidence": 0.4344
+     },
+     {
+      "label": "Checking or savings account | Problem with a lender or other company charging your account",
+      "confidence": 0.068
+     }
+    ]
+   },
+   "similar": [
+    {
+     "id": 28914,
+     "similarity": 0.8922609751068981,
+     "label": "Checking or savings account | Managing an account",
+     "product": "Checking or savings account",
+     "date": "2015-12-05",
+     "snippet": "I was wrongfully charged overdraft fees"
+    },
+    {
+     "id": 7135,
+     "similarity": 0.8387910223727824,
+     "label": "Checking or savings account | Managing an account",
+     "product": "Checking or savings account",
+     "date": "2023-01-21",
+     "snippet": "Overdraft fees when I shouldn't have had them, closed account."
+    },
+    {
+     "id": 30805,
+     "similarity": 0.8320349454879761,
+     "label": "Checking or savings account | Managing an account",
+     "product": "Checking or savings account",
+     "date": "2023-01-19",
+     "snippet": "I have been charged XXXXXXXX XXXX XXXX in overdraft fees over the years."
+    },
+    {
+     "id": 36509,
+     "similarity": 0.8310545086860657,
+     "label": "Other",
+     "product": "Checking or savings account",
+     "date": "2023-01-23",
+     "snippet": "I was charged overdraft fees totaling almost a XXXX ( {$1000.00} ) dollars"
+    },
+    {
+     "id": 26050,
+     "similarity": 0.8300240883238346,
+     "label": "Checking or savings account | Managing an account",
+     "product": "Checking or savings account",
+     "date": "2021-06-17",
+     "snippet": "I contacted the bank on a transaction that had not yet posted in my account and stated I had money to cover the transaction when it posted and they still charged me an overdraft fee regardless it posting."
+    }
+   ],
+   "candidates": [
+    "Other",
+    "Checking or savings account | Managing an account",
+    "Checking or savings account | Problem with a lender or other company charging your account"
+   ],
+   "llm": {
+    "label": "Checking or savings account | Managing an account",
+    "confidence": "high",
+    "reason": "The complaint is about an overdraft fee despite sufficient funds, matching prior examples labeled as Managing an account.",
+    "model": "openai/gpt-oss-120b",
+    "ok": true
+   }
+  },
+  {
+   "label": "Vague case",
+   "text": "Please help. Something is wrong with my account and nobody is answering me.",
+   "mode": "recorded",
+   "llm_provider": "openai/gpt-oss-120b",
+   "threshold": 0.8,
+   "final": {
+    "source": "human_review",
+    "label": null,
+    "product": null,
+    "issue": null,
+    "classifier_label": "Credit reporting | Dispute, accuracy or use of report",
+    "classifier_confidence": 0.2972,
+    "reason": "classifier confidence 0.30 (below 0.8); LLM: LLM call failed: RateLimitError",
+    "case_id": 3
+   },
+   "trace": [
+    {
+     "step": "classify",
+     "tool": "classify_complaint",
+     "model": "DistilBERT+LoRA (ONNX int8)",
+     "summary": "Credit reporting | Dispute, accuracy or use of report at confidence 0.30",
+     "ms": 20
+    },
+    {
+     "step": "search",
+     "tool": "search_similar_complaints",
+     "summary": "5 similar complaints; candidates: ['Credit reporting | Dispute, accuracy or use of report', 'Other', 'Checking or savings account | Managing an account']",
+     "ms": 63
+    },
+    {
+     "step": "llm",
+     "model": "openai/gpt-oss-120b",
+     "summary": "chose None (low): LLM call failed: RateLimitError",
+     "ms": 87
+    },
+    {
+     "step": "flag",
+     "tool": "flag_for_review",
+     "summary": "queued as case 3 (queue length 3)",
+     "ms": 13
+    }
+   ],
+   "classification": {
+    "label": "Credit reporting | Dispute, accuracy or use of report",
+    "product": "Credit reporting",
+    "issue": "Dispute, accuracy or use of report",
+    "confidence": 0.2972,
+    "alternatives": [
+     {
+      "label": "Credit reporting | Dispute, accuracy or use of report",
+      "confidence": 0.2972
+     },
+     {
+      "label": "Other",
+      "confidence": 0.198
+     },
+     {
+      "label": "Checking or savings account | Managing an account",
+      "confidence": 0.1683
+     }
+    ]
+   },
+   "similar": [
+    {
+     "id": 25249,
+     "similarity": 0.6748219929582477,
+     "label": "Credit card | Getting a credit card",
+     "product": "Credit card",
+     "date": "2018-12-11",
+     "snippet": "Account was not open by me"
+    },
+    {
+     "id": 21910,
+     "similarity": 0.6568130254745483,
+     "label": "Other",
+     "product": "Credit card",
+     "date": "2015-08-08",
+     "snippet": "its not my account"
+    },
+    {
+     "id": 29789,
+     "similarity": 0.6115499917134642,
+     "label": "Credit reporting | Dispute, accuracy or use of report",
+     "product": "Credit reporting",
+     "date": "2020-04-22",
+     "snippet": "I found accounts I never open this is not mine this is a fraud accounts"
+    },
+    {
+     "id": 31871,
+     "similarity": 0.6010980606079102,
+     "label": "Credit reporting | Dispute, accuracy or use of report",
+     "product": "Credit reporting",
+     "date": "2019-01-15",
+     "snippet": "I do not recognize account or inquiry"
+    },
+    {
+     "id": 47483,
+     "similarity": 0.5875785842444242,
+     "label": "Checking or savings account | Closing an account",
+     "product": "Checking or savings account",
+     "date": "2023-01-21",
+     "snippet": "My Account Was Closed XXXX XXXX XXXX"
+    }
+   ],
+   "candidates": [
+    "Credit reporting | Dispute, accuracy or use of report",
+    "Other",
+    "Checking or savings account | Managing an account"
+   ],
+   "llm": {
+    "label": null,
+    "confidence": "low",
+    "reason": "LLM call failed: RateLimitError",
+    "model": "openai/gpt-oss-120b",
+    "ok": false
+   }
+  }
+ ]
+}

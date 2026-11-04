@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ComplaintOps</title>
+<meta name="description" content="An end-to-end ML system that triages consumer financial complaints and knows when not to trust its own model.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232a78d6'/%3E%3Cpath d='M9 17l5 5 9-12' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#demo">Skip to the demo</a>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">✓</span>ComplaintOps</a>
+    <nav aria-label="Sections">
+      <a href="#demo">Live demo</a>
+      <a href="#how">How it works</a>
+      <a href="#results">Results</a>
+      <a href="#safety">Safety checks</a>
+      <a href="#agent">The agent</a>
+      <a href="#speed">Speed</a>
+    </nav>
+    <button class="theme" id="theme" type="button" aria-label="Switch between light and dark theme">◐</button>
+  </div>
+</header>
+
+<main id="top">
+  <!-- HERO -->
+  <section class="hero wrap">
+    <p class="eyebrow">Portfolio project · end-to-end machine learning</p>
+    <h1>Triage consumer complaints, and know when <em>not</em> to trust the model.</h1>
+    <p class="lede">A fine-tuned DistilBERT sorts 335,000 real CFPB complaints into 24 product and issue classes. When it is unsure, an agent looks up similar past complaints, asks an LLM to choose between a few candidates, and sends anything still unclear to a human. Every model change passes an automated evaluation gate.</p>
+    <div class="cta">
+      <a class="btn primary" href="#demo">Try it live</a>
+      <a class="btn" href="#results">See the evidence</a>
+    </div>
+    <div class="kpis" id="kpis" aria-label="Headline numbers"></div>
+  </section>
+
+  <!-- DEMO -->
+  <section id="demo" class="wrap section">
+    <div class="sec-head">
+      <h2>Live demo</h2>
+      <p>Paste a complaint and watch the real agent decide. It trusts the classifier when it is confident, and otherwise looks for similar cases, asks an LLM, or escalates to a human.</p>
+    </div>
+    <div class="card demo">
+      <form id="demo-form" autocomplete="off">
+        <label for="complaint" class="field-label">Complaint text</label>
+        <textarea id="complaint" rows="4" maxlength="2000" placeholder="Describe a problem with a bank account, credit card, mortgage, loan, credit report or debt collector…"></textarea>
+        <div class="form-row">
+          <div class="examples" id="examples" role="group" aria-label="Example complaints"></div>
+          <span class="count" id="count" aria-live="polite">0 / 2000</span>
+        </div>
+        <div class="form-row">
+          <button class="btn primary" id="go" type="submit">Triage complaint</button>
+          <p class="fine">Public demo on a free host: please do not enter personal information. When the classifier is unsure, the text is sent to an LLM provider. Requests are rate-limited.</p>
+        </div>
+      </form>
+      <div id="demo-status" class="status" role="status" aria-live="polite"></div>
+      <div id="result" class="result" hidden></div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how" class="wrap section">
+    <div class="sec-head">
+      <h2>How it works</h2>
+      <p>Six stages, each with a measurable check. The pipeline was built to be re-run, not just demonstrated.</p>
+    </div>
+    <ol class="pipeline" id="pipeline"></ol>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="results" class="wrap section">
+    <div class="sec-head">
+      <h2>Results, honestly reported</h2>
+      <p>Complaints are split by <strong>date</strong>: train on the past, tune on a later period, and score the finalists on the newest complaints. Weighted F1 is the headline metric (each class counts in proportion to its size); macro-F1 sits next to it in the table views.</p>
+    </div>
+    <div class="grid two" id="results-grid"></div>
+    <div class="callout" id="why-not-higher"></div>
+  </section>
+
+  <!-- SAFETY -->
+  <section id="safety" class="wrap section">
+    <div class="sec-head">
+      <h2>The evaluation gate</h2>
+      <p>A new model replaces the champion only if it passes three automated checks on the held-out test set. The gate runs on the model's original 26-class outputs; the 24 served classes are a fixed merge of them. To prove the gate works, a deliberately weaker model was blocked and the real candidates were promoted.</p>
+    </div>
+    <div class="grid three" id="gates"></div>
+  </section>
+
+  <!-- AGENT -->
+  <section id="agent" class="wrap section">
+    <div class="sec-head">
+      <h2>When should the agent trust the model?</h2>
+      <p>A classifier's confidence is only useful if it means something. This checks it on validation complaints, which the model never trained on, and sets the agent's threshold from the data.</p>
+    </div>
+    <div class="grid two" id="agent-grid"></div>
+  </section>
+
+  <!-- DRIFT -->
+  <section id="drift" class="wrap section">
+    <div class="sec-head">
+      <h2>Drift monitoring</h2>
+      <p>In production the true label arrives late or never, so the monitor watches proxies: how different the text looks, how the predicted classes shift, and how sure the model is.</p>
+    </div>
+    <div class="grid two" id="drift-grid"></div>
+  </section>
+
+  <!-- SPEED -->
+  <section id="speed" class="wrap section">
+    <div class="sec-head">
+      <h2>Small enough to run on a free server</h2>
+      <p>The LoRA adapter was merged into DistilBERT, exported to ONNX and quantized to 8-bit integers, then benchmarked on 500 complaints using 2 CPU threads, about what a small free host provides.</p>
+    </div>
+    <div class="grid two" id="speed-grid"></div>
+  </section>
+
+  <!-- STACK + LIMITS -->
+  <section id="build" class="wrap section">
+    <div class="sec-head">
+      <h2>What is in the box</h2>
+    </div>
+    <div class="grid two">
+      <div class="card"><h3>Engineering</h3><ul class="chips" id="stack"></ul><p class="fine" id="facts-line"></p></div>
+      <div class="card"><h3>Known limits</h3><ul class="limits" id="limits"></ul></div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-inner">
+    <span>Built by Hardik Bahri · data: public CFPB Consumer Complaint Database (third-party Hugging Face copy)</span>
+    <span id="generated"></span>
+  </div>
+</footer>
+
+<div id="tip" class="tip" role="tooltip" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>

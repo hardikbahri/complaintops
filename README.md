@@ -2,13 +2,77 @@
 
 Complaint triage platform: train, track, gate, monitor and serve models, then put an agent in front of them.
 
-Status: Milestone 1 in progress (model side).
+Status: Milestone 1 (model side) done; Milestone 2 (agent) in progress: classifier API, similar-complaint search,
+MCP tools, LangGraph agent and the web page are built; tracing, CI agent checks and the hosted deployment are not.
 
 ## Quick start
 ```
 uv sync
 uv run pytest
+docker compose up -d                                  # Postgres + pgvector for similar-complaint search
+uv run python -m complaintops.vector_store index      # embed 50,000 training complaints (needs data/processed)
+uv run uvicorn complaintops.api:app --port 8000       # then open http://127.0.0.1:8000
 ```
+Models and data are not in git (`data/` is ignored); `export_onnx` and the training scripts rebuild them. Keys go in
+a git-ignored `.env` (see `.env.example`); with no key the agent runs against a mock LLM.
+
+## Label taxonomy: 24 served classes, 26 original
+The models are trained on 26 `product | issue` classes. The served taxonomy merges three credit-reporting issues
+that consumers choose among on a form ("Incorrect information on your report", "Problem with a credit reporting
+company's investigation", "Improper use of your report") into one class, "Credit reporting | Dispute, accuracy or
+use of report". They were 73.8% of validation complaints. The merge is applied after the model by adding the three
+classes' probabilities (`complaintops.taxonomy`), so the same model serves both taxonomies; `TAXONOMY=full` serves
+the 26. The scores below are on different label sets and are not comparable across the two rows.
+
+| Held-out test weighted F1 | 26 classes | 24 classes |
+|---|---|---|
+| TF-IDF baseline | 0.531 | 0.776 |
+| LoRA + class offsets (champion) | 0.587 | 0.817 (95% interval of the gain over the baseline +0.038 to +0.044) |
+
+On the 24 classes the champion's test macro-F1 is 0.533 and accuracy 0.829. At confidence 0.8 the classifier alone
+answers 74% of validation complaints at 96.8% accuracy (43% at 85% on 26 classes). Reproduce with
+`python -m complaintops.evaluate_taxonomy`. The evaluation gate was run on the 26-class outputs.
+
+## The web page and the agent
+`web/` is a single static page (plain HTML, CSS and JavaScript, no build step) served by the FastAPI app. It has a
+live demo that runs the real agent (`POST /triage`) and shows the decision, the classifier's confidence against the
+agent's threshold, the similar past complaints and a step-by-step trace, followed by the evidence: model
+comparison, the held-out test intervals, the evaluation gate, the confidence check, drift and serving speed.
+Every number is read from `web/showcase.json`, which `python -m complaintops.make_showcase` regenerates from the
+MLflow runs and result files (`--record` also re-records the example runs against the real LLM). Each chart has a
+table view, and light and dark themes follow the system setting. If the live service cannot be reached the page
+falls back to the recorded runs and says so. `/triage` is rate-limited (per client and per day) so a public demo
+cannot exhaust a free LLM quota.
+
+The agent (`complaintops.agent`) calls three tools, only through an MCP server (`complaintops.mcp_server`):
+`classify_complaint`, `search_similar_complaints` (pgvector) and `flag_for_review`. It trusts the classifier at
+confidence 0.8 or more (chosen from validation: 43% of complaints, 85% accurate), otherwise searches for similar
+complaints and asks an LLM to pick among at most five candidate labels (the classifier's top three plus any label
+that two of the five similar complaints share), and queues the case for a human if the LLM cannot decide. An LLM
+answer is accepted only if it is one of the candidates, so text planted in a complaint cannot make it invent a label.
+
+**Does the LLM help?** Not in the tests so far. `python -m complaintops.evaluate_agent` asks the LLM
+(`openai/gpt-oss-120b`) to choose among at most five candidate labels for 150 random validation complaints below the
+threshold, with the true label hidden:
+
+| | 24 classes (served) | 26 classes (original) |
+|---|---|---|
+| Unsure complaints (below 0.8) | 26% of validation | 57% of validation |
+| Classifier's top guess right | 47% | 55% |
+| True label among the candidates | 85% | 90% |
+| LLM gave a usable answer | 51% | 89% |
+| LLM right when it answered | 39% (30 of 76) | 47% (62 of 133) |
+| Classifier right on the same complaints | 43% (33 of 76) | 55% (73 of 133) |
+| Disagreements: classifier right / LLM right | 12 / 9 (sign test p = 0.66) | 32 / 21 (p = 0.17) |
+
+In both, the LLM called itself "high confidence" on 95% to 99% of its answers, so its confidence says nothing about
+when to trust it, and it did not beat the classifier's own guess. `python -m complaintops.pipeline_eval` combines
+this with the confident part (the classifier answers those exactly) into an end-to-end estimate on validation, with
+bootstrap intervals; on 24 classes the whole pipeline scores 0.877 weighted F1 on the complaints it answers itself
+(87% of them), against 0.887 for the classifier alone on the same complaints (difference -0.010, 95% interval -0.027
+to +0.008). Counting every human review as correct (an assumption, not a measurement) gives 0.896, counting them as
+wrong gives 0.796, and the classifier alone is 0.843. One model and one zero-shot prompt were tried, so this is a
+first measurement, not a verdict on LLMs. The 26-class files are kept in `results/archive_26class/`.
 
 ## Results (fill in as you go)
 
