@@ -1,0 +1,7 @@
+champion  weighted F1 0.5310  95% CI [0.5266, 0.5356]
+candidate weighted F1 0.5771  95% CI [0.5724, 0.5817]
+difference +0.0460  95% CI [+0.0424, +0.0498]  (1000 paired bootstrap resamples)
+  [PASS] lower bound of the difference: 95% lower bound of (candidate - champion) = +0.0424 must be >= -0.005
+  [PASS] class recall floor: lowest class recall 0.136 (floor 0.1); no class below floor
+  [PASS] golden set: 40/40 golden cases kept; regressions at rows []
+GATE: PASSED, candidate may be promoted
