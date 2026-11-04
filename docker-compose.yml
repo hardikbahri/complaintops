@@ -1,0 +1,21 @@
+# Local development database: Postgres with the pgvector extension.
+# The credentials below are for local development only; never reuse them anywhere public.
+#   docker compose up -d        start it       docker compose down      stop it (data is kept in the volume)
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: complaintops
+      POSTGRES_PASSWORD: complaintops
+      POSTGRES_DB: complaintops
+    ports:
+      - "5433:5432"   # 5433 on your machine, so it cannot clash with a Postgres you may already have
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U complaintops"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  pgdata:
