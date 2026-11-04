@@ -1,0 +1,10 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "n": 150,
+  "threshold": 0.8,
+  "classifier_top1": 0.5533333333333333,
+  "in_candidates": 0.9,
+  "llm_coverage": 0.8866666666666667,
+  "llm_accuracy_when_answered": 0.46616541353383456,
+  "classifier_accuracy_on_answered": 0.5488721804511278
+}

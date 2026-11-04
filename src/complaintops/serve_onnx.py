@@ -7,23 +7,29 @@ The per-class offsets in bias.json are added to the logits before the softmax, e
     -> [{"label": "Debt collection | Attempts to collect debt not owed", "confidence": 0.71}]
 """
 import json
+import os
 from pathlib import Path
 
 import numpy as np
 import onnxruntime as ort
 from tokenizers import Tokenizer
 
+from complaintops.taxonomy import merge_proba, merged_classes
+
 ONNX_DIR = Path("data/onnx")
 MAX_LEN = 256
 
 
 class Classifier:
-    def __init__(self, model="model_int8.onnx", onnx_dir=ONNX_DIR, threads=None):
+    def __init__(self, model="model_int8.onnx", onnx_dir=ONNX_DIR, threads=None, taxonomy=None):
+        """taxonomy: "merged" (24 classes, the default) or "full" (the 26 original classes); env TAXONOMY sets it."""
         onnx_dir = Path(onnx_dir)
+        self.merged = (taxonomy or os.environ.get("TAXONOMY", "merged")) == "merged"
         self.tok = Tokenizer.from_file(str(onnx_dir / "tokenizer" / "tokenizer.json"))
         self.tok.enable_truncation(max_length=MAX_LEN)
         self.tok.enable_padding(pad_id=self.tok.token_to_id("[PAD]"), pad_token="[PAD]")  # to the longest in a batch
-        self.classes = json.load(open(onnx_dir / "classes.json"))
+        self.full_classes = json.load(open(onnx_dir / "classes.json"))
+        self.classes = merged_classes(self.full_classes) if self.merged else self.full_classes
         self.bias = np.array(json.load(open(onnx_dir / "bias.json"))["bias"], dtype="float32")
         opts = ort.SessionOptions()
         if threads:
@@ -39,7 +45,8 @@ class Classifier:
             mask = np.array([e.attention_mask for e in enc], dtype=np.int64)
             logits = self.session.run(None, {"input_ids": ids, "attention_mask": mask})[0] + self.bias
             z = np.exp(logits - logits.max(axis=1, keepdims=True))
-            out.append(z / z.sum(axis=1, keepdims=True))
+            p = z / z.sum(axis=1, keepdims=True)
+            out.append(merge_proba(p, self.full_classes) if self.merged else p)
         return np.concatenate(out) if out else np.zeros((0, len(self.classes)), dtype="float32")
 
     def predict(self, texts, batch_size=16, top_k=1):

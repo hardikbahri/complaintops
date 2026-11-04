@@ -1,0 +1,75 @@
+{
+  "classes_before": 26,
+  "classes_after": 24,
+  "merged_label": "Credit reporting | Dispute, accuracy or use of report",
+  "trio_confusion_val": {
+    "rows": 37150,
+    "share_of_val": 0.7382016890213612,
+    "exactly_right": 0.6966890982503364,
+    "swapped_with_a_sibling": 0.268021534320323,
+    "predicted_outside_trio": 0.03528936742934051
+  },
+  "validation": [
+    {
+      "model": "TF-IDF + LR baseline",
+      "weighted_f1": 0.8123573841230302,
+      "macro_f1": 0.4825617321814195,
+      "accuracy": 0.8091405861897665
+    },
+    {
+      "model": "LoRA + offsets (champion)",
+      "weighted_f1": 0.8536382458881336,
+      "macro_f1": 0.545570152303966,
+      "accuracy": 0.85826130153999
+    }
+  ],
+  "test": [
+    {
+      "model": "TF-IDF + LR baseline",
+      "weighted_f1": 0.7762621345517742,
+      "macro_f1": 0.48510852935301285,
+      "accuracy": 0.7817784401390959
+    },
+    {
+      "model": "LoRA + offsets (champion)",
+      "weighted_f1": 0.8172948504321452,
+      "macro_f1": 0.5328152682246938,
+      "accuracy": 0.8294485842026825
+    }
+  ],
+  "test_gain_lora_over_lr": {
+    "point": 0.04103271588037105,
+    "ci95": [
+      0.03794259390410548,
+      0.04386366618134691
+    ]
+  },
+  "threshold_val": [
+    {
+      "t": 0.7,
+      "handled_26": 0.549150521609538,
+      "accuracy_26": 0.8101751338833406,
+      "handled_24": 0.7949130650769995,
+      "accuracy_24": 0.9513798620137986
+    },
+    {
+      "t": 0.8,
+      "handled_26": 0.4325881768504719,
+      "accuracy_26": 0.8529627928341754,
+      "handled_24": 0.7402483854942872,
+      "accuracy_24": 0.9678146726438139
+    },
+    {
+      "t": 0.9,
+      "handled_26": 0.3006656731246895,
+      "accuracy_26": 0.9043685149692684,
+      "handled_24": 0.6696075509190264,
+      "accuracy_24": 0.9805032939640335
+    }
+  ],
+  "unsure_val": {
+    "share": 0.2597516145057129,
+    "top1": 0.5460526315789473,
+    "in_top3": 0.8682680538555692
+  }
+}
