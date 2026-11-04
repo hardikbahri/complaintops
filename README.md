@@ -174,7 +174,33 @@ Where the remaining error is: about 17-23% of validation complaints have a templ
 label. On the other complaints accuracy is about 0.59-0.60, which is where any further gain has to come from.
 
 ### Drift (Step 8)
-(normal batch vs shifted batch)
+`python -m complaintops.drift` compares batches of complaints with a reference (a random 70% of the validation
+split, 35,227 rows) using the champion's outputs and writes an Evidently HTML report per batch
+(`results/drift/*.html`, not in git because each is about 4 MB) plus `results/drift/summary.json`. The text
+shows no labels, only the complaint text, the model's confidence and its predicted class, which is what is
+available in production.
+
+Signals and thresholds (the usual rules of thumb, not tuned on these batches):
+- **PSI** on the predicted class mix, the prediction confidence and the text statistics (length, words, XXXX
+  redactions, dollar amounts): watch at 0.10, alert at 0.25.
+- **Text domain classifier**: TF-IDF + logistic regression tries to tell reference text from current text
+  (5-fold AUC): 0.5 means indistinguishable; watch at 0.60, alert at 0.70.
+- **Evidently**: share of drifted columns, alert at 50%.
+
+| Batch | What it is | Status | Text AUC | Class-mix PSI | Mean confidence | Evidently drifted columns |
+|---|---|---|---|---|---|---|
+| normal | 5,000 other validation rows (same period) | **OK**, no alerts | 0.51 | 0.004 | 0.725 (ref 0.719) | 0% |
+| shift_time | newest month of the test period (2,630 rows, real later data) | **ALERT** | 0.75 | 0.036 | 0.662 | 43% |
+| shift_mix | rare products over-sampled to 70% (5,000 rows) | **ALERT** | 0.80 | 1.41 | 0.645 | 57% |
+
+Reading it: the normal batch raises nothing. The real later month is caught by the text classifier (the
+wording has changed, AUC 0.75) and the model is visibly less sure (confidence 0.72 -> 0.66), even though the
+class mix and the simple text statistics barely moved; Evidently's tabular columns alone (43%) would not have
+fired. This is the drift behind the test split being harder than validation (weighted F1 0.64 vs 0.59 for the
+champion). The artificially shifted class mix fires on several signals at once.
+`tests/test_drift.py` checks all of this: on synthetic data (new wording, new class mix and lost confidence each
+fire; same-distribution data stays quiet) and on the real batches (skipped if the model outputs are missing).
+Evidently 0.7.x does not import under pandas 3, so pandas is pinned below 3.
 
 ### Serving benchmark (Step 9)
 | Variant | Size (MB) | p50 ms | p95 ms | Macro-F1 |

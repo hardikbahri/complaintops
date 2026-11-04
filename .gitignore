@@ -26,3 +26,6 @@ mlflow.db
 
 # large model files
 results/xgb_model.json
+
+# Evidently HTML reports are large and regenerable
+results/drift/*.html

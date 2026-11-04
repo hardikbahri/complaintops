@@ -1,0 +1,67 @@
+{
+  "normal": {
+    "status": "ok",
+    "alerts": [],
+    "warnings": [],
+    "metrics": {
+      "psi_n_chars": 0.0009364426567542843,
+      "psi_n_words": 0.0023041672262698364,
+      "psi_n_xxxx": 0.003121466773874685,
+      "psi_n_dollar": 0.0005727498392105587,
+      "psi_conf": 0.0024808493661473323,
+      "psi_pred": 0.003943388901384819,
+      "mean_confidence_ref": 0.7190575003623962,
+      "mean_confidence_cur": 0.7252886295318604,
+      "text_auc": 0.5091578333333333,
+      "evidently_drifted_share": 0.0
+    },
+    "n_rows": 5000
+  },
+  "shift_time": {
+    "status": "alert",
+    "alerts": [
+      "text domain-classifier AUC 0.75 (alert at 0.7)"
+    ],
+    "warnings": [
+      "PSI 0.12 on prediction confidence (watch at 0.1)"
+    ],
+    "metrics": {
+      "psi_n_chars": 0.053094741400044165,
+      "psi_n_words": 0.056499335879773856,
+      "psi_n_xxxx": 0.0903877917651699,
+      "psi_n_dollar": 0.008527172666232036,
+      "psi_conf": 0.12177361982793831,
+      "psi_pred": 0.03619320494043309,
+      "mean_confidence_ref": 0.7190575003623962,
+      "mean_confidence_cur": 0.6624082326889038,
+      "text_auc": 0.7523033439835763,
+      "evidently_drifted_share": 0.42857142857142855
+    },
+    "n_rows": 2630
+  },
+  "shift_mix": {
+    "status": "alert",
+    "alerts": [
+      "PSI 1.41 on class mix (predicted labels) (alert at 0.25)",
+      "text domain-classifier AUC 0.80 (alert at 0.7)",
+      "Evidently: 57% of columns drifted (alert at 50%)"
+    ],
+    "warnings": [
+      "PSI 0.12 on text statistic n_xxxx (watch at 0.1)",
+      "PSI 0.23 on prediction confidence (watch at 0.1)"
+    ],
+    "metrics": {
+      "psi_n_chars": 0.02508132298308252,
+      "psi_n_words": 0.024818678248164635,
+      "psi_n_xxxx": 0.11755100474173659,
+      "psi_n_dollar": 0.042176360939449,
+      "psi_conf": 0.22867985014891706,
+      "psi_pred": 1.408613362923206,
+      "mean_confidence_ref": 0.7190575003623962,
+      "mean_confidence_cur": 0.6449910402297974,
+      "text_auc": 0.8041485,
+      "evidently_drifted_share": 0.5714285714285714
+    },
+    "n_rows": 5000
+  }
+}
