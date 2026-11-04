@@ -20,3 +20,9 @@ __pycache__/
 .DS_Store
 Thumbs.db
 venv/
+
+# MLflow tracking database
+mlflow.db
+
+# large model files
+results/xgb_model.json
