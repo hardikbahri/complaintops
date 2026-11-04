@@ -1,0 +1,32 @@
+                                                                                                     precision    recall  f1-score   support
+
+                                                   Checking or savings account | Closing an account       0.40      0.68      0.50       476
+                                                  Checking or savings account | Managing an account       0.60      0.53      0.57      1894
+                                                   Checking or savings account | Opening an account       0.52      0.75      0.61       360
+         Checking or savings account | Problem with a lender or other company charging your account       0.26      0.35      0.30       402
+                                                                     Credit card | Fees or interest       0.50      0.78      0.61       394
+                                                                Credit card | Getting a credit card       0.30      0.67      0.41       372
+                                                   Credit card | Other features, terms, or problems       0.31      0.45      0.37       451
+                                                         Credit card | Problem when making payments       0.19      0.54      0.28       269
+                                      Credit card | Problem with a purchase shown on your statement       0.60      0.72      0.65       895
+                                                     Credit reporting | Improper use of your report       0.68      0.75      0.71     10549
+                                            Credit reporting | Incorrect information on your report       0.76      0.56      0.64     15813
+Credit reporting | Problem with a credit reporting company's investigation into an existing problem       0.65      0.63      0.64     10788
+                                   Credit reporting | Problem with fraud alerts or security freezes       0.42      0.66      0.51       173
+                                Credit reporting | Unable to get your credit report or credit score       0.27      0.70      0.39       284
+                                                Debt collection | Attempts to collect debt not owed       0.24      0.37      0.29      1045
+                                                            Debt collection | Communication tactics       0.44      0.63      0.51       228
+                                               Debt collection | False statements or representation       0.12      0.30      0.17       228
+                              Debt collection | Took or threatened to take negative or legal action       0.21      0.33      0.25       256
+                                                  Debt collection | Written notification about debt       0.15      0.41      0.22       340
+                                 Money transfer, virtual currency, or money service | Fraud or scam       0.34      0.69      0.45       378
+                             Mortgage | Applying for a mortgage or refinancing an existing mortgage       0.28      0.58      0.38       113
+                                                              Mortgage | Struggling to pay mortgage       0.54      0.71      0.61       246
+                                                          Mortgage | Trouble during payment process       0.58      0.72      0.64       461
+                                                                                              Other       0.52      0.15      0.23      3443
+                                                Student loan | Dealing with your lender or servicer       0.31      0.85      0.46       143
+                                                 Vehicle loan or lease | Managing the loan or lease       0.27      0.73      0.39       324
+
+                                                                                           accuracy                           0.59     50325
+                                                                                          macro avg       0.40      0.59      0.45     50325
+                                                                                       weighted avg       0.63      0.59      0.59     50325

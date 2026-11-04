@@ -1,0 +1,14 @@
+{
+  "best_value": 0.437419330358987,
+  "best_params": {
+    "max_depth": 8,
+    "learning_rate": 0.06049716507542575,
+    "subsample": 0.5488360570031919,
+    "colsample_bytree": 0.7789631185585097,
+    "min_child_weight": 5
+  },
+  "n_trials": 13,
+  "n_train": 40000,
+  "max_tfidf": 20000,
+  "total_minutes": 100.5
+}

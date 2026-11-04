@@ -1,0 +1,16 @@
+                                                    precision    recall  f1-score   support
+
+                       Checking or savings account       0.82      0.82      0.82      3309
+                                       Credit card       0.73      0.78      0.75      3543
+                                  Credit reporting       0.98      0.91      0.94     37915
+                                   Debt collection       0.45      0.72      0.55      2151
+Money transfer, virtual currency, or money service       0.61      0.75      0.67       991
+                                          Mortgage       0.77      0.91      0.83       932
+                                             Other       0.00      0.00      0.00         6
+                              Payday/personal loan       0.41      0.57      0.48       362
+                                      Student loan       0.50      0.86      0.63       237
+                             Vehicle loan or lease       0.51      0.76      0.61       879
+
+                                          accuracy                           0.88     50325
+                                         macro avg       0.58      0.71      0.63     50325
+                                      weighted avg       0.90      0.88      0.89     50325
