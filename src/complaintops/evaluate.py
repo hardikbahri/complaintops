@@ -53,8 +53,13 @@ def golden_regressions(golden_y, champ_pred, cand_pred):
     return np.flatnonzero((champ_pred == golden_y) & (cand_pred != golden_y))
 
 
-def run_gate(y, champ_pred, cand_pred, classes, golden=None, n_boot=N_BOOT, seed=0):
-    """Apply the three gate rules. golden = (golden_y, champ_golden_pred, cand_golden_pred) or None."""
+def run_gate(y, champ_pred, cand_pred, classes, golden=None, n_boot=N_BOOT, seed=0,
+             require_improvement=False):
+    """Apply the gate rules. golden = (golden_y, champ_golden_pred, cand_golden_pred) or None.
+
+    require_improvement adds a fourth rule: the lower bound of the difference must be above zero, i.e. the
+    candidate is clearly better, not merely not-worse (use it when promoting a refinement of the champion).
+    """
     k = len(classes)
     boots = bootstrap(y, {"champion": champ_pred, "candidate": cand_pred}, k, n_boot, seed)
     champ_f1, cand_f1 = weighted_f1(y, champ_pred, k), weighted_f1(y, cand_pred, k)
@@ -66,6 +71,11 @@ def run_gate(y, champ_pred, cand_pred, classes, golden=None, n_boot=N_BOOT, seed
     checks.append(dict(
         name="lower bound of the difference", passed=bool(diff_lo >= -MARGIN),
         detail=f"95% lower bound of (candidate - champion) = {diff_lo:+.4f} must be >= -{MARGIN}"))
+
+    if require_improvement:
+        checks.append(dict(
+            name="must clearly improve", passed=bool(diff_lo > 0),
+            detail=f"95% lower bound of the difference {diff_lo:+.4f} must be > 0"))
 
     recall = per_class_recall(y, cand_pred, k)
     low = [(classes[i], float(recall[i])) for i in range(k) if recall[i] < RECALL_FLOOR]

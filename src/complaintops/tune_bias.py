@@ -14,6 +14,7 @@ import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import KFold
 
+from complaintops.evaluate import weighted_f1
 from complaintops.tracking import log_run
 
 LORA = Path("data/lora_colab")
@@ -27,17 +28,17 @@ def macro_f1(y, pred, k):
     return float(np.mean(np.where(denom > 0, 2 * tp / np.maximum(denom, 1), 0.0)))
 
 
-def fit_bias(logp, y, passes=3):
-    """Coordinate ascent: tune one class offset at a time, keep any change that raises macro-F1."""
+def fit_bias(logp, y, score, passes=3):
+    """Coordinate ascent: tune one class offset at a time, keep any change that raises score(y, pred)."""
     k = logp.shape[1]
     b = np.zeros(k)
-    best = macro_f1(y, (logp + b).argmax(1), k)
+    best = score(y, (logp + b).argmax(1))
     for _ in range(passes):
         for c in range(k):
             keep = b[c]
             for v in GRID:
                 b[c] = v
-                s = macro_f1(y, (logp + b).argmax(1), k)
+                s = score(y, (logp + b).argmax(1))
                 if s > best + 1e-6:
                     best, keep = s, v
             b[c] = keep
@@ -50,8 +51,16 @@ def summary(y, pred):
 
 
 def main():
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--metric", choices=["macro", "weighted"], default="weighted",
+                    help="what the offsets are tuned to maximise (headline metric is weighted F1)")
+    args = ap.parse_args()
     classes = json.load(open(LORA / "classes.json"))
     k = len(classes)
+    score = (lambda y_, p_: weighted_f1(y_, p_, k)) if args.metric == "weighted" else (lambda y_, p_: macro_f1(y_, p_, k))
+    print(f"tuning offsets to maximise {args.metric} F1 (validation only)")
     va = pd.read_parquet("data/processed/val.parquet")
     y = va["label"].map({c: i for i, c in enumerate(classes)}).to_numpy()
     logp = np.log(np.clip(np.load(LORA / "proba_val.npy"), 1e-9, 1.0))
@@ -62,33 +71,34 @@ def main():
     # 1. random 5-fold cross-fit: every row is predicted with offsets tuned on the other 4/5
     oof = np.zeros(len(y), dtype=int)
     for tr, te in KFold(5, shuffle=True, random_state=42).split(logp):
-        oof[te] = (logp[te] + fit_bias(logp[tr], y[tr])).argmax(1)
+        oof[te] = (logp[te] + fit_bias(logp[tr], y[tr], score)).argmax(1)
     cf = summary(y, oof)
     print(f"cross-fitted (5-fold):        macro {cf[0]:.4f}  weighted {cf[1]:.4f}  acc {cf[2]:.4f}")
 
     # 2. chronological check: tune on the older half, test on the newer half (val is sorted by date)
     h = len(y) // 2
-    b_old = fit_bias(logp[:h], y[:h])
+    b_old = fit_bias(logp[:h], y[:h], score)
     new_base = summary(y[h:], base_pred[h:])
     new_tuned = summary(y[h:], (logp[h:] + b_old).argmax(1))
     print(f"newer half, no bias:          macro {new_base[0]:.4f}  weighted {new_base[1]:.4f}  acc {new_base[2]:.4f}")
     print(f"newer half, tuned on older:   macro {new_tuned[0]:.4f}  weighted {new_tuned[1]:.4f}  acc {new_tuned[2]:.4f}")
 
     # Final offsets: tuned on all of validation, saved for the evaluation gate (applied to test later).
-    b = fit_bias(logp, y)
+    b = fit_bias(logp, y, score)
     Path("results").mkdir(exist_ok=True)
-    json.dump(dict(classes=classes, bias=[float(x) for x in b]), open("results/lora_bias.json", "w"), indent=2)
+    out_path = "results/lora_bias.json" if args.metric == "macro" else "results/lora_bias_weighted.json"
+    json.dump(dict(classes=classes, bias=[float(x) for x in b]), open(out_path, "w"), indent=2)
     print("\nlargest offsets (class, b):")
     for i in np.argsort(-np.abs(b))[:8]:
         print(f"  {b[i]:+.2f}  {classes[i]}")
 
-    log_run("lora_bias_tuned",
+    log_run("lora_bias_tuned" if args.metric == "macro" else "lora_bias_tuned_weighted",
             {"model": "lora_bias_tuned", "n_classes": k, "grid": "-2..2 step 0.25", "passes": 3,
-             "evaluation": "5-fold cross-fit on validation"},
+             "tuned_for": args.metric, "evaluation": "5-fold cross-fit on validation"},
             {"val_macro_f1_crossfit": cf[0], "val_weighted_f1_crossfit": cf[1], "val_accuracy_crossfit": cf[2],
              "val_macro_f1_untuned": base[0], "newer_half_macro_tuned_on_older": new_tuned[0],
              "newer_half_macro_untuned": new_base[0]},
-            artifacts=["results/lora_bias.json"],
+            artifacts=[out_path],
             tags={"stage": "experiment", "note": "test split not scored"})
 
 

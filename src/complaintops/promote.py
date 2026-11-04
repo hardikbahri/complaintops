@@ -60,6 +60,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--candidate-version", type=int, required=True)
     ap.add_argument("--dry-run", action="store_true", help="run the gate but never move the alias")
+    ap.add_argument("--require-improvement", action="store_true",
+                    help="also require the candidate to be clearly better (lower bound of the difference > 0)")
     args = ap.parse_args()
 
     mlflow.set_tracking_uri(TRACKING_URI)
@@ -82,7 +84,8 @@ def main():
     g_champ = scorers[champ.version](golden["text"]).argmax(1)
     g_cand = scorers[cand.version](golden["text"]).argmax(1)
 
-    report = run_gate(y, p_champ.argmax(1), p_cand.argmax(1), CLASSES, golden=(g_y, g_champ, g_cand))
+    report = run_gate(y, p_champ.argmax(1), p_cand.argmax(1), CLASSES, golden=(g_y, g_champ, g_cand),
+                      require_improvement=args.require_improvement)
     text = format_report(report)
     print("\n" + text)
 

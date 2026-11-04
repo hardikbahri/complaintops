@@ -72,6 +72,16 @@ def test_golden_set_regression_blocks():
     assert run_gate(y, champ, cand, CLASSES, golden=(g_y, g_champ, g_champ), n_boot=100)["passed"]
 
 
+def test_require_improvement_blocks_an_equal_model_but_passes_a_better_one():
+    y, rng = make_data()
+    champ = noisy(y, rng, 0.6)
+    same = champ.copy()
+    better = noisy(y, rng, 0.85)
+    assert run_gate(y, champ, same, CLASSES, n_boot=200)["passed"]  # not-worse is enough by default
+    assert not run_gate(y, champ, same, CLASSES, n_boot=200, require_improvement=True)["passed"]
+    assert run_gate(y, champ, better, CLASSES, n_boot=200, require_improvement=True)["passed"]
+
+
 def test_interval_brackets_the_estimate():
     y, rng = make_data()
     pred = noisy(y, rng, 0.7)

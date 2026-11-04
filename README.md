@@ -151,6 +151,28 @@ Saved test probabilities are reused after a spot check against the live register
 100% agreement). The blend and the per-class bias tuning were not taken forward: the blend added +0.005 macro-F1,
 and the bias tuning was tuned for macro-F1 and adds only +0.002 weighted F1.
 
+**Refinement run**: v4 = v3 plus 26 per-class offsets on the scores, tuned for weighted F1 on the
+**validation** split only (5-fold cross-fitted validation gain +0.008; a chronological check, tuned on the older
+half and scored on the newer half, +0.010). Gated against champion v3 with `--require-improvement`, which
+adds a rule that the lower bound of the difference must be above zero:
+```
+champion  weighted F1 0.5771  95% CI [0.5724, 0.5817]
+candidate weighted F1 0.5869  95% CI [0.5824, 0.5914]
+difference +0.0099  95% CI [+0.0079, +0.0117]  (1000 paired bootstrap resamples)
+  [PASS] lower bound of the difference: 95% lower bound of (candidate - champion) = +0.0079 must be >= -0.005
+  [PASS] must clearly improve: 95% lower bound of the difference +0.0079 must be > 0
+  [PASS] class recall floor: lowest class recall 0.101 (floor 0.1); no class below floor
+  [PASS] golden set: 40/40 golden cases kept; regressions at rows []
+GATE: PASSED, candidate may be promoted
+alias 'champion' now points to v4
+```
+The offsets were tuned without looking at the test split, and the gain carried over to it (+0.010 on test).
+The lowest class recall (0.101) is right at the floor, so the next change that lowers it will be blocked.
+
+Where the remaining error is: about 17-23% of validation complaints have a templated near-duplicate in train
+(99% credit reporting) and LoRA already gets 0.83-0.86 accuracy on them, the same as copying the sibling's
+label. On the other complaints accuracy is about 0.59-0.60, which is where any further gain has to come from.
+
 ### Drift (Step 8)
 (normal batch vs shifted batch)
 
