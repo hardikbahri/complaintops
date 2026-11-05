@@ -38,13 +38,15 @@ def search_similar_complaints(text: str, k: int = 5, product: str | None = None)
 
 @mcp.tool()
 def flag_for_review(text: str, reason: str, predicted_label: str | None = None,
-                    confidence: float | None = None) -> dict:
+                    confidence: float | None = None, summary: str | None = None,
+                    suggestions: list[dict] | None = None) -> dict:
     """Send a complaint to the human review queue when it cannot be labelled reliably.
 
-    Give a short `reason` (for example "low confidence and the similar complaints disagree"). Returns the case
-    id and the current queue length.
+    Give a short `reason` (for example "low confidence and the similar complaints disagree"). Optionally add a short
+    `summary` note for the reviewer and `suggestions`, the labels worth considering. Returns the case id and the
+    current queue length.
     """
-    return tools.flag_for_review(text, reason, predicted_label, confidence)
+    return tools.flag_for_review(text, reason, predicted_label, confidence, summary, suggestions)
 
 
 def main():

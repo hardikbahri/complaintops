@@ -1,76 +1,181 @@
 {
-  "classifier alone": {
-    "weighted_f1": 0.8428135863987971,
-    "accuracy": 0.8376406689849318,
-    "weighted_f1_ci95": [
-      0.8236273740617551,
-      0.8646540382742269
-    ],
-    "accuracy_ci95": [
-      0.8185922172545128,
-      0.8584640900811398
-    ]
+  "current": {
+    "classifier alone, every complaint": {
+      "weighted_f1": 0.8536382458881336,
+      "accuracy": 0.85826130153999,
+      "weighted_f1_ci95": [
+        0.8503990213007172,
+        0.8571862184823851
+      ],
+      "accuracy_ci95": [
+        0.855180824639841,
+        0.8615399900645803
+      ]
+    },
+    "pipeline, automated answers only": {
+      "weighted_f1": 0.9629782371236627,
+      "accuracy": 0.9678146726438139,
+      "coverage": 0.7402483854942872,
+      "weighted_f1_ci95": [
+        0.9607600418211881,
+        0.9650716199003218
+      ],
+      "accuracy_ci95": [
+        0.9660617278864776,
+        0.9695496198579615
+      ]
+    },
+    "pipeline, humans assumed correct": {
+      "weighted_f1": 0.9755525775926447,
+      "accuracy": 0.9761748633879781,
+      "weighted_f1_ci95": [
+        0.9741897269186495,
+        0.9768982648786105
+      ],
+      "accuracy_ci95": [
+        0.9748827620466964,
+        0.9774470938897168
+      ]
+    },
+    "pipeline, humans counted wrong": {
+      "weighted_f1": 0.7636460229319026,
+      "accuracy": 0.7164232488822653,
+      "weighted_f1_ci95": [
+        0.7597232564370004,
+        0.7675790090594735
+      ],
+      "accuracy_ci95": [
+        0.7124093392945852,
+        0.7202603079980129
+      ]
+    }
   },
-  "pipeline, automated answers only": {
-    "weighted_f1": 0.8773044794524555,
-    "accuracy": 0.8813080212756457,
-    "coverage": 0.8718558701771817,
-    "weighted_f1_ci95": [
-      0.8582512945505397,
-      0.8980492913079823
-    ],
-    "accuracy_ci95": [
-      0.8613296316171507,
-      0.9015974897016146
-    ]
+  "current_test": {
+    "classifier alone, every complaint": {
+      "weighted_f1": 0.8172948504321452,
+      "accuracy": 0.8294485842026825,
+      "weighted_f1_ci95": [
+        0.8137178158935308,
+        0.8207572191763549
+      ],
+      "accuracy_ci95": [
+        0.8262488822652757,
+        0.8324495777446597
+      ]
+    },
+    "pipeline, automated answers only": {
+      "weighted_f1": 0.9222255481665196,
+      "accuracy": 0.9386543355131748,
+      "coverage": 0.7262195727769498,
+      "weighted_f1_ci95": [
+        0.9190707807148208,
+        0.9253884284177037
+      ],
+      "accuracy_ci95": [
+        0.9362770523508172,
+        0.9410219481173714
+      ]
+    },
+    "pipeline, humans assumed correct": {
+      "weighted_f1": 0.9509055322578129,
+      "accuracy": 0.9554495777446597,
+      "weighted_f1_ci95": [
+        0.9488910232381232,
+        0.9529216669249402
+      ],
+      "accuracy_ci95": [
+        0.9537004470938897,
+        0.9571385991058122
+      ]
+    },
+    "pipeline, humans counted wrong": {
+      "weighted_f1": 0.7260589379600887,
+      "accuracy": 0.6816691505216096,
+      "weighted_f1_ci95": [
+        0.7219551867152417,
+        0.7300516785560096
+      ],
+      "accuracy_ci95": [
+        0.6776934923000497,
+        0.6857824143070045
+      ]
+    }
   },
-  "pipeline, humans assumed correct": {
-    "weighted_f1": 0.8963860970500978,
-    "accuracy": 0.8965177016062267,
-    "weighted_f1_ci95": [
-      0.876860885544016,
-      0.9160292765913263
-    ],
-    "accuracy_ci95": [
-      0.8774692498758078,
-      0.9155661533366459
-    ]
-  },
-  "pipeline, humans counted wrong": {
-    "weighted_f1": 0.7963420374940113,
-    "accuracy": 0.7683735717834081,
-    "weighted_f1_ci95": [
-      0.7787574319109909,
-      0.8128431163388055
-    ],
-    "accuracy_ci95": [
-      0.7527884749130652,
-      0.7874220235138268
-    ]
-  },
-  "classifier alone, same answered complaints": {
-    "weighted_f1": 0.8869806683126275,
-    "accuracy": 0.887266611987501,
-    "weighted_f1_ci95": [
-      0.8664372124711751,
-      0.9080097970841124
-    ],
-    "accuracy_ci95": [
-      0.8672634996716709,
-      0.906956673273909
-    ]
-  },
-  "_paired_automated_vs_classifier_same_complaints": {
-    "point": -0.009676188860171964,
-    "ci95": [
-      -0.02709193505833885,
-      0.007995347505324737
-    ]
+  "llm_decides": {
+    "classifier alone": {
+      "weighted_f1": 0.8428135863987971,
+      "accuracy": 0.8376406689849318,
+      "weighted_f1_ci95": [
+        0.8217012561332304,
+        0.8636819664004622
+      ],
+      "accuracy_ci95": [
+        0.8168605398244746,
+        0.8584207981453887
+      ]
+    },
+    "pipeline, automated answers only": {
+      "weighted_f1": 0.8773044794524555,
+      "accuracy": 0.8813080212756457,
+      "coverage": 0.8718558701771817,
+      "weighted_f1_ci95": [
+        0.8566633496688049,
+        0.8985299984967642
+      ],
+      "accuracy_ci95": [
+        0.8610611376259416,
+        0.9015966057746279
+      ]
+    },
+    "pipeline, humans assumed correct": {
+      "weighted_f1": 0.8963860970500978,
+      "accuracy": 0.8965177016062267,
+      "weighted_f1_ci95": [
+        0.8773993041737566,
+        0.9144931463038385
+      ],
+      "accuracy_ci95": [
+        0.8774692498758078,
+        0.9155661533366457
+      ]
+    },
+    "pipeline, humans counted wrong": {
+      "weighted_f1": 0.7963420374940113,
+      "accuracy": 0.7683735717834081,
+      "weighted_f1_ci95": [
+        0.7785901116991276,
+        0.8134374053901914
+      ],
+      "accuracy_ci95": [
+        0.7527884749130652,
+        0.7856903460837892
+      ]
+    },
+    "classifier alone, same answered complaints": {
+      "weighted_f1": 0.8869806683126275,
+      "accuracy": 0.887266611987501,
+      "weighted_f1_ci95": [
+        0.8673063911577632,
+        0.9059945561476814
+      ],
+      "accuracy_ci95": [
+        0.8675169543650754,
+        0.9063286744561997
+      ]
+    },
+    "_paired_automated_vs_classifier_same_complaints": {
+      "point": -0.009676188860171964,
+      "ci95": [
+        -0.027865228997641187,
+        0.007680494731025741
+      ]
+    }
   },
   "_meta": {
     "split": "validation",
     "threshold": 0.8,
     "n_validation": 50325,
+    "n_classes": 24,
     "n_unsure": 13072,
     "n_llm_sample": 150,
     "n_bootstrap": 1000

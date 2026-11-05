@@ -45,11 +45,14 @@ def server_params(review_db):
 
 def test_flag_for_review_queues_cases_and_validates_input(tmp_path, monkeypatch):
     monkeypatch.setenv("REVIEW_DB", str(tmp_path / "q.db"))
-    a = tools.flag_for_review("My overdraft fee was wrong.", "low confidence", "Other", 0.5)
+    a = tools.flag_for_review("My overdraft fee was wrong.", "low confidence", "Other", 0.5,
+                              summary="A fee dispute.", suggestions=[{"label": "Other", "neighbour_votes": 1}])
     b = tools.flag_for_review("Another complaint.", "similar complaints disagree")
     assert a["status"] == "queued" and (a["queue_length"], b["queue_length"]) == (1, 2)
     queue = tools.list_review_queue()
     assert [q["case_id"] for q in queue] == [b["case_id"], a["case_id"]]  # newest first
+    assert queue[1]["summary"] == "A fee dispute." and queue[1]["suggestions"][0]["label"] == "Other"
+    assert queue[0]["summary"] is None and queue[0]["suggestions"] == []
     with pytest.raises(ValueError):
         tools.flag_for_review("   ", "reason")
     with pytest.raises(ValueError):

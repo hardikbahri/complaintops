@@ -132,10 +132,10 @@ def test_a_run_can_opt_out_of_tracing(fake, tmp_path, monkeypatch):
 
 @needs_model
 @pytest.mark.skipif(not db_available(), reason="start the database and run vector_store index")
-def test_an_unsure_run_records_the_search_and_the_llm_as_a_generation(fake, tmp_path, monkeypatch):
+def test_an_unsure_run_records_the_search_and_the_note_as_a_generation(fake, tmp_path, monkeypatch):
     run_agent(UNSURE, tmp_path, monkeypatch)
     started = {(e[1], e[2]): e[3] for e in fake.log if e[0] == "start"}
     assert ("tool:search_similar_complaints", "span") in started
-    gen = started[("llm:choose-label", "generation")]
+    gen = started[("llm:summarise-case", "generation")]
     assert gen["model"] == "mock" and gen["input"][1]["role"] == "user" and UNSURE in gen["input"][1]["content"]
-    assert [e for e in fake.log if e[0] == "update" and e[1] == "llm:choose-label"][0][2]["output"]  # the raw reply
+    assert [e for e in fake.log if e[0] == "update" and e[1] == "llm:summarise-case"][0][2]["output"]  # the raw reply

@@ -3,6 +3,7 @@
 Plain Python functions so they can be tested directly; mcp_server.py exposes exactly these over MCP and the
 agent calls them through that server. Inputs are validated because an LLM, not a programmer, supplies them.
 """
+import json
 import os
 import sqlite3
 import time
@@ -73,21 +74,28 @@ def _review_db():
     conn.execute("""CREATE TABLE IF NOT EXISTS review_queue (
         id INTEGER PRIMARY KEY AUTOINCREMENT, created_at TEXT, status TEXT, text TEXT, reason TEXT,
         predicted_label TEXT, confidence REAL)""")
+    have = {row[1] for row in conn.execute("PRAGMA table_info(review_queue)")}
+    for column in ("summary", "suggestions"):  # added later; older queue files are upgraded in place
+        if column not in have:
+            conn.execute(f"ALTER TABLE review_queue ADD COLUMN {column} TEXT")
     return conn
 
 
 def flag_for_review(text: str, reason: str, predicted_label: str | None = None,
-                    confidence: float | None = None) -> dict:
-    """Put a complaint in the human review queue, with the reason it could not be decided automatically."""
+                    confidence: float | None = None, summary: str | None = None,
+                    suggestions: list | None = None) -> dict:
+    """Put a complaint in the human review queue, with the reason it could not be decided automatically, an optional
+    short note for the reviewer and the labels worth considering."""
     _check_text(text)
     if not isinstance(reason, str) or not reason.strip():
         raise ValueError("reason must be a non-empty string")
     conn = _review_db()
     with conn:
         cur = conn.execute(
-            "INSERT INTO review_queue (created_at, status, text, reason, predicted_label, confidence) "
-            "VALUES (?, 'queued', ?, ?, ?, ?)",
-            (time.strftime("%Y-%m-%dT%H:%M:%S"), text, reason.strip()[:1000], predicted_label, confidence))
+            "INSERT INTO review_queue (created_at, status, text, reason, predicted_label, confidence, summary, "
+            "suggestions) VALUES (?, 'queued', ?, ?, ?, ?, ?, ?)",
+            (time.strftime("%Y-%m-%dT%H:%M:%S"), text, reason.strip()[:1000], predicted_label, confidence,
+             (summary or "").strip()[:1000] or None, json.dumps(suggestions[:10]) if suggestions else None))
         case_id = cur.lastrowid
     queued = conn.execute("SELECT COUNT(*) FROM review_queue WHERE status = 'queued'").fetchone()[0]
     conn.close()
@@ -97,8 +105,11 @@ def flag_for_review(text: str, reason: str, predicted_label: str | None = None,
 def list_review_queue(limit: int = 50) -> list[dict]:
     """The queued cases, newest first (for a reviewer UI; not exposed to the agent)."""
     conn = _review_db()
-    rows = conn.execute("SELECT id, created_at, status, text, reason, predicted_label, confidence "
+    rows = conn.execute("SELECT id, created_at, status, text, reason, predicted_label, confidence, summary, suggestions "
                         "FROM review_queue ORDER BY id DESC LIMIT ?", (limit,)).fetchall()
     conn.close()
-    keys = ["case_id", "created_at", "status", "text", "reason", "predicted_label", "confidence"]
-    return [dict(zip(keys, r)) for r in rows]
+    keys = ["case_id", "created_at", "status", "text", "reason", "predicted_label", "confidence", "summary", "suggestions"]
+    out = [dict(zip(keys, r)) for r in rows]
+    for row in out:
+        row["suggestions"] = json.loads(row["suggestions"]) if row["suggestions"] else []
+    return out
