@@ -21,6 +21,7 @@
       <a href="#safety">Safety checks</a>
       <a href="#agent">The agent</a>
       <a href="#speed">Speed</a>
+      <a href="#lessons">Lessons</a>
     </nav>
     <button class="theme" id="theme" type="button" aria-label="Switch between light and dark theme">◐</button>
   </div>
@@ -31,7 +32,7 @@
   <section class="hero wrap">
     <p class="eyebrow">Portfolio project · end-to-end machine learning</p>
     <h1>Triage consumer complaints, and know when <em>not</em> to trust the model.</h1>
-    <p class="lede">A fine-tuned DistilBERT sorts 335,000 real CFPB complaints into 24 product and issue classes. When it is unsure, an agent looks up similar past complaints, asks an LLM to choose between a few candidates, and sends anything still unclear to a human. Every model change passes an automated evaluation gate.</p>
+    <p class="lede">A fine-tuned DistilBERT sorts 335,000 real CFPB complaints into 24 product and issue classes. When it is unsure, an agent looks up similar past complaints, has an LLM write a short note, and sends the case to a human reviewer with the likely labels. Every model change passes an automated evaluation gate.</p>
     <div class="cta">
       <a class="btn primary" href="#demo">Try it live</a>
       <a class="btn" href="#results">See the evidence</a>
@@ -43,7 +44,7 @@
   <section id="demo" class="wrap section">
     <div class="sec-head">
       <h2>Live demo</h2>
-      <p>Paste a complaint and watch the real agent decide. It trusts the classifier when it is confident, and otherwise looks for similar cases, asks an LLM, or escalates to a human.</p>
+      <p>Paste a complaint and watch the real agent decide. It trusts the classifier when it is confident, and otherwise looks for similar cases, has an LLM write a note, and queues the case for a human reviewer.</p>
     </div>
     <div class="card demo">
       <form id="demo-form" autocomplete="off">
@@ -117,6 +118,15 @@
       <p>The LoRA adapter was merged into DistilBERT, exported to ONNX and quantized to 8-bit integers, then benchmarked on 500 complaints using 2 CPU threads, about what a small free host provides.</p>
     </div>
     <div class="grid two" id="speed-grid"></div>
+  </section>
+
+  <!-- WHAT DID NOT WORK -->
+  <section id="lessons" class="wrap section">
+    <div class="sec-head">
+      <h2>What I tried that didn't work</h2>
+      <p>Each of these was tested, measured and written up, and each changed what I built next.</p>
+    </div>
+    <div class="grid two" id="lessons-grid"></div>
   </section>
 
   <!-- STACK + LIMITS -->

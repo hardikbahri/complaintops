@@ -33,6 +33,11 @@ def test_showcase_numbers_match_the_gate_reports():
     for key in ("facts", "models_validation", "calibration", "serving", "drift", "gates"):
         assert s[key], key
     assert [m["name"] for m in s["models_validation"]][0].startswith("TF-IDF")
+    assert len(s["lessons"]) == 4  # the experiments that did not work, with numbers from the result files
+    for lesson in s["lessons"]:
+        assert all(lesson[k] for k in ("title", "verdict", "tried", "result", "learned"))
+    xgb_card = s["lessons"][0]["result"]
+    assert f"{s['models_validation'][1]['weighted_f1']:.3f}" in xgb_card and f"{s['models_validation'][0]['weighted_f1']:.3f}" in xgb_card
 
 
 needs_model = pytest.mark.skipif(not (ROOT / "data" / "onnx" / "model_int8.onnx").exists(), reason="run export_onnx first")

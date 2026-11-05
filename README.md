@@ -46,15 +46,19 @@ cannot exhaust a free LLM quota.
 
 The agent (`complaintops.agent`) calls three tools, only through an MCP server (`complaintops.mcp_server`):
 `classify_complaint`, `search_similar_complaints` (pgvector) and `flag_for_review`. It trusts the classifier at
-confidence 0.8 or more (chosen from validation: 43% of complaints, 85% accurate), otherwise searches for similar
-complaints and asks an LLM to pick among at most five candidate labels (the classifier's top three plus any label
-that two of the five similar complaints share), and queues the case for a human if the LLM cannot decide. An LLM
-answer is accepted only if it is one of the candidates, so text planted in a complaint cannot make it invent a label.
+confidence 0.8 or more. Every other complaint is searched for similar past ones, an LLM writes a short note for the
+reviewer (what the complaint is about, why the candidate labels are hard to tell apart, what would settle it), and
+the case is queued for a human with the classifier's top guesses, the labels that at least two of the five similar
+complaints share, and the note. The LLM never chooses a label, so text planted in a complaint cannot make the
+pipeline invent one; if the LLM is unavailable a template note is used and the case is queued all the same.
+
+**Why the LLM does not decide.** It was tried as the decider first and measured (below): it did not beat the
+classifier's own guess, so its job was changed to writing notes.
 
 **Tracing (Langfuse).** With `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` and `LANGFUSE_BASE_URL` set in `.env`,
 each `/triage` run is recorded as one Langfuse trace (`complaintops.tracing`): a root span `triage`, a span per tool
 call made through MCP (`tool:classify_complaint`, `tool:search_similar_complaints`, `tool:flag_for_review`) and a
-generation `llm:choose-label` holding the model name, the exact prompt and the raw reply, all with timings. The
+generation `llm:summarise-case` holding the model name, the exact prompt and the raw reply, all with timings. The
 response carries `trace_id` and `trace_url`, and the page links to it. Tracing does nothing without keys and cannot
 break a request (every call swallows its own errors). Because the run's text is sent to Langfuse's cloud, the page
 shows an opt-out checkbox whenever the server traces (the API takes `trace=false`), and a public deployment should
@@ -63,7 +67,7 @@ The first real trace paid for itself: it showed the similarity search taking 18 
 (the embedding model loading), so the tool server now loads its models in the background at start-up; the same
 request takes about 3 s end to end. `tests/test_tracing.py` checks the recorded structure with a fake client.
 
-**Does the LLM help?** Not in the tests so far. `python -m complaintops.evaluate_agent` asks the LLM
+**Experiment: should the LLM choose the label?** `python -m complaintops.evaluate_agent` asks the LLM
 (`openai/gpt-oss-120b`) to choose among at most five candidate labels for 150 random validation complaints below the
 threshold, with the true label hidden:
 
@@ -78,12 +82,24 @@ threshold, with the true label hidden:
 | Disagreements: classifier right / LLM right | 12 / 9 (sign test p = 0.66) | 32 / 21 (p = 0.17) |
 
 In both, the LLM called itself "high confidence" on 95% to 99% of its answers, so its confidence says nothing about
-when to trust it, and it did not beat the classifier's own guess. `python -m complaintops.pipeline_eval` combines
-this with the confident part (the classifier answers those exactly) into an end-to-end estimate on validation, with
-bootstrap intervals; on 24 classes the whole pipeline scores 0.877 weighted F1 on the complaints it answers itself
-(87% of them), against 0.887 for the classifier alone on the same complaints (difference -0.010, 95% interval -0.027
-to +0.008). Counting every human review as correct (an assumption, not a measurement) gives 0.896, counting them as
-wrong gives 0.796, and the classifier alone is 0.843. One model and one zero-shot prompt were tried, so this is a
+when to trust it, and it did not beat the classifier's own guess. On validation the LLM-decides pipeline scored -0.010
+weighted F1 against the classifier alone on the same complaints (95% interval -0.028 to +0.008), which is why it was
+replaced.
+
+**End to end, the pipeline that runs now** (`python -m complaintops.pipeline_eval`, 24 classes). The threshold (0.8)
+and the per-class offsets were fixed on validation, so the test column is the clean one:
+
+| | Test weighted F1 [95% interval] | Test accuracy | Validation weighted F1 |
+|---|---|---|---|
+| Classifier alone, every complaint | 0.817 [0.814, 0.821] | 82.9% | 0.854 |
+| Pipeline, answered with no human (72.6% of test complaints) | 0.922 [0.919, 0.925] | 93.9% | 0.963 |
+| Pipeline, human reviews assumed correct | 0.951 [0.949, 0.953] | 95.5% | 0.976 |
+| Pipeline, human reviews counted wrong | 0.726 [0.722, 0.730] | 68.2% | 0.764 |
+
+The no-human row scores only what the classifier answered itself, a part selected by the model's own confidence, so
+read it with its coverage. "Humans assumed correct" is an assumption about the reviewers, not a measurement. The
+point of the pipeline is the trade between accuracy and automation: about 73% of complaints with no human at 94%
+accuracy on test, the rest to a person. One model and one zero-shot prompt were tried, so this is a
 first measurement, not a verdict on LLMs. The 26-class files are kept in `results/archive_26class/`.
 
 ## Results (fill in as you go)

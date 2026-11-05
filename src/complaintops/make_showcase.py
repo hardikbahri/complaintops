@@ -132,6 +132,63 @@ def agent_eval():
     return summary
 
 
+def lessons(runs, models, agent):
+    """The experiments that did not work, with numbers read from the run records and result files."""
+    from sklearn.metrics import f1_score
+
+    from complaintops.data import merge_labels
+
+    def metric(name, key):
+        v = runs[name].get(f"metrics.{key}")
+        return None if v is None or pd.isna(v) else float(v)
+
+    base, xgb = models[0], models[1]
+    trials = (load(R / "optuna_xgb_best.json") or {}).get("n_trials")
+    t_base, t_xgb = metric("baseline_tfidf_lr", "train_time_s"), metric("xgboost_final", "train_time_s")
+    old = pd.read_parquet("data/baseline_val_preds.parquet")
+    merged = pd.read_parquet("data/baseline_merged_val_preds.parquet")
+    rescored = f1_score(merge_labels(old["y"]), merge_labels(old["pred"]), average="macro")
+    retrained = f1_score(merged["y"], merged["pred"], average="macro")
+    a26 = load(R / "archive_26class" / "agent_llm_eval_26class.json")
+    blend = metric("blend_lora_lr", "val_macro_f1") - metric("blend_lora_lr", "val_macro_f1_lora")
+    return [
+        dict(title="XGBoost with Optuna tuning", verdict="Did not beat the baseline",
+             tried=f"A gradient-boosted model on the TF-IDF features plus five engineered text features (length, redaction "
+                   f"count, dollar amounts, weekday), tuned with {trials} Optuna trials, then trained on all the data on a Colab GPU.",
+             result=f"Validation weighted F1 {xgb['weighted_f1']:.3f} against {base['weighted_f1']:.3f} for the TF-IDF + logistic "
+                    f"regression baseline (macro-F1 {xgb['macro_f1']:.3f} against {base['macro_f1']:.3f}), in {t_xgb / 60:.0f} minutes "
+                    f"against {t_base / 60:.0f}. None of its 15 most important features was an engineered one.",
+             learned="On sparse text a linear model is hard to beat, and the features I added carried nothing beyond the words. "
+                     "That pointed to a model that reads context, which is where the LoRA fine-tune came from. I also did not save "
+                     "XGBoost's vectorizer, so the model could not be reused; every run since saves what it needs to be reproduced."),
+        dict(title="Merging confusable labels (26 to 19 classes)", verdict="No gain",
+             tried="Merged 12 confusable labels into 5 groups and retrained the baseline on the merged labels.",
+             result=f"Macro-F1 {retrained:.4f} for the retrained model against {rescored:.4f} for the original model simply scored on "
+                    "the merged labels: training on them added nothing. The merged task is dominated by one large class, so its "
+                    "weighted F1 looks high without the model getting better.",
+             learned="Merging changes the task, not the model, and the weak classes were a long tail of small ones, not the ones I "
+                     "merged. Later I merged just three overlapping credit-reporting issues for the served taxonomy as a labelled "
+                     "product decision, and the page shows both class counts side by side."),
+        dict(title="An LLM choosing the label for unsure complaints", verdict="Replaced",
+             tried=f"For complaints the classifier was unsure about, an LLM ({agent['model']}) chose among at most five candidate "
+                   "labels, shown the similar past complaints.",
+             result=f"On {agent['n']} random validation complaints (24 classes) the LLM was right {agent['llm_accuracy_when_answered']:.0%} "
+                    f"of the time when it answered, against {agent['classifier_accuracy_on_answered']:.0%} for the classifier's own guess "
+                    f"on the same complaints; on the 26 classes {a26['llm_accuracy_when_answered']:.0%} against "
+                    f"{a26['classifier_accuracy_on_answered']:.0%}. It called itself high-confidence on {agent['llm_says_high']:.0%} of its answers.",
+             learned=f"The right label was among the candidates {agent['in_candidates']:.0%} of the time, so the limit was not a "
+                     "missing option: the labels overlap and the LLM does not know how people label them. Its job is now a note for "
+                     "the human reviewer, and it can never set a label."),
+        dict(title="Blending models", verdict="Dropped",
+             tried="Averaging the probabilities of XGBoost and the logistic regression, then of LoRA and the logistic regression.",
+             result="The XGBoost blend could not be built: its vectorizer was not saved, and rebuilding it on my laptop gave a different "
+                    "vocabulary, so the saved model read the wrong columns (its score fell from 0.45 to 0.21 in a check that stopped the run). "
+                    f"The LoRA plus logistic regression blend gained only {blend:+.4f} macro-F1 on validation.",
+             learned="A gain that small does not justify serving two models. Reproducibility is part of the model: a saved model without "
+                     "the exact preprocessing that produced its inputs cannot be used."),
+    ]
+
+
 def count_tests():
     out = subprocess.run([sys.executable, "-m", "pytest", "--collect-only", "-q"], capture_output=True, text=True).stdout
     last = [ln for ln in out.splitlines() if "test" in ln and ("collected" in ln or " tests" in ln)]
@@ -196,6 +253,7 @@ def main():
         drift=load(R / "drift" / "summary.json"),
         agent_eval=agent_eval(),
         pipeline_eval=load(R / "pipeline_eval.json"),
+        lessons=lessons(runs, models, agent_eval()),
         recorded_runs=[],
     )
     if "--record" in sys.argv:

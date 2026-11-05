@@ -254,3 +254,10 @@ table.data td.num, table.data th.num { text-align: right; font-variant-numeric: 
   .hbar { grid-template-columns: minmax(84px, 38%) minmax(0, 1fr) 50px; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+
+.review-note { color: var(--ink2); max-width: 80ch; margin: 0; }
+
+.lesson .lesson-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.lesson .pill { white-space: nowrap; margin-left: 0; }
+.lesson h4 { margin: 16px 0 4px; font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 650; }
+.lesson p { color: var(--ink2); font-size: 14.5px; }
