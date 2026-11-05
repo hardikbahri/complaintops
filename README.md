@@ -104,6 +104,8 @@ first measurement, not a verdict on LLMs. The 26-class files are kept in `result
 
 ## Results (fill in as you go)
 
+**Read the class counts.** The models are trained on 26 classes and served with 24 (three overlapping credit-reporting issues are merged; see the label taxonomy section above). Every score in this Results section is for the original 26 classes unless a row says otherwise, and scores on different class counts are not comparable: the 24-class scores are higher because the merged class is easy and large.
+
 ### Data (Step 2)
 The official CFPB bulk file and API no longer include the complaint narrative, so this project uses
 a third-party copy of the CFPB Consumer Complaint Database: Hugging Face `sovai/cfpb_complaints`
@@ -128,13 +130,13 @@ The biggest class is 28-31% of every split; "Other" is 13.5% of train but 6.8% (
 The smallest classes have only 113 (val) and 93 (test) rows, so their recall is noisy.
 `tests/test_data.py` checks that no narrative appears in two splits.
 
-### Model comparison (Steps 3, 4, 6)
+### Model comparison (Steps 3, 4, 6), original 26 classes
 Headline metric: **weighted F1** (each class's F1 weighted by its number of validation rows). Macro-F1
 (every class counts equally, so small classes weigh as much as large ones) is reported next to it and is
 the stricter measure. The headline was switched from macro to weighted F1 after the first results, so the
 two columns are always shown together; all models are scored on both on the same validation split.
 
-| Model | Val weighted F1 | Val macro-F1 | Train time | Notes |
+| Model (26 classes unless stated) | Val weighted F1 | Val macro-F1 | Train time | Notes |
 |---|---|---|---|---|
 | TF-IDF + logistic regression | 0.6047 | 0.4717 | ~16 min (235k rows) | 5-fold CV macro-F1 0.4635 ± 0.0044 (50k subsample); val accuracy 0.60 |
 | XGBoost (Optuna-tuned) | 0.59 | 0.4543 | ~33 min (T4 GPU, 211k rows) | val accuracy 0.59; did not beat TF-IDF + LR; hit the 800-tree cap without early stopping; weighted F1 read from the 2-decimal report |
@@ -160,7 +162,7 @@ Merging 12 confusable labels into 5 (26 -> 19 classes: three credit-reporting is
 debt-collection misconduct issues, two mortgage payment issues, opening/managing a checking account,
 two credit-card terms issues) did not help. The original 26-class model scored on the merged task:
 macro-F1 0.4801. A TF-IDF + LR model retrained on merged labels: 0.4777. The merged task is easier and
-dominated by one class (74% of validation), so those numbers are not comparable with 0.4717.
+dominated by one class (74% of validation), so those numbers are not comparable with the 26-class 0.4717.
 The weak classes are a long tail of small ones, not the merged ones. The 26-class task stays the main one.
 
 ### Product-level task (easier version)
@@ -179,12 +181,12 @@ artifacts and the git commit. View them with
 runs were back-filled from saved results (`python -m complaintops.log_existing`, tagged
 `logged_after_the_fact=true`); later runs are logged live by the training scripts through
 `complaintops.tracking.log_run`. The best 26-class model with a registrable artifact is registered as
-`complaint-classifier` with alias `champion` (v1: TF-IDF + LR, val macro-F1 0.4717; `complaintops.register`).
+`complaint-classifier` with alias `champion` (v1: TF-IDF + LR, 26-class val macro-F1 0.4717; `complaintops.register`).
 A blend of LR and XGBoost was attempted and dropped: the XGBoost model was trained on Colab and its fitted
 TF-IDF vectorizer was not saved, and a local refit does not reproduce the same vocabulary (ties at the
 `max_features` cutoff), so the model could not be reused.
 
-### Error analysis (Step 3)
+### Error analysis (Step 3, 26 classes)
 Read from 20 random validation errors (12 stay within the right product, 8 cross products)
 and the per-class report. Weakest classes: Debt collection | False statements (F1 0.18),
 Written notification (0.22), Took or threatened legal action (0.25), and Other (0.28).
@@ -195,7 +197,7 @@ Written notification (0.22), Took or threatened legal action (0.25), and Other (
 4. **Adjacent classes within a product** (mortgage "Struggling to pay" vs "Trouble during payment", checking "Opening" vs "Managing") differ by intent, not distinctive words, and bag-of-words cannot tell intent.
 5. **"Other" is a grab-bag** with no consistent vocabulary, so its recall is only 0.19.
 
-### Evaluation gate (Step 7)
+### Evaluation gate (Step 7), run on the 26-class outputs
 A candidate model version replaces the `champion` alias only if `python -m complaintops.promote
 --candidate-version N` passes three checks, all on the **test** split (scored here for the first time; every
 earlier choice was made on validation) plus the golden set. The metric is **weighted F1**.
@@ -213,7 +215,7 @@ earlier choice was made on validation) plus the golden set. The metric is **weig
 `tests/test_gate.py` checks the rules on synthetic predictions (identical model passes, clearly worse model
 blocked, collapsed small class blocked, golden regression blocked, better model passes).
 
-**Blocked run**: v2, the baseline pipeline trained on 5% of train (11,742 rows), against champion v1
+**Blocked run** (26 classes): v2, the baseline pipeline trained on 5% of train (11,742 rows), against champion v1
 (TF-IDF + LR):
 ```
 champion  weighted F1 0.5310  95% CI [0.5266, 0.5356]
@@ -224,7 +226,7 @@ difference -0.0294  95% CI [-0.0325, -0.0262]  (1000 paired bootstrap resamples)
   [FAIL] golden set: 34/40 golden cases kept; regressions at rows [6, 13, 16, 23, 37, 39]
 GATE: BLOCKED
 ```
-**Promoted run**: v3, DistilBERT + LoRA (all train rows, 3 epochs, rank 16), against champion v1:
+**Promoted run** (26 classes): v3, DistilBERT + LoRA (all train rows, 3 epochs, rank 16), against champion v1:
 ```
 champion  weighted F1 0.5310  95% CI [0.5266, 0.5356]
 candidate weighted F1 0.5771  95% CI [0.5724, 0.5817]
@@ -235,7 +237,7 @@ difference +0.0460  95% CI [+0.0424, +0.0498]  (1000 paired bootstrap resamples)
 GATE: PASSED, candidate may be promoted
 alias 'champion' now points to v3
 ```
-Notes: the test split is harder than validation for both models (baseline weighted F1 0.6047 on validation vs
+Notes: the test split is harder than validation for both models (26 classes; baseline weighted F1 0.6047 on validation vs
 0.5310 on test; LoRA 0.6433 vs 0.5771). Both drop by a similar amount, which points to the later time period
 (data drift) and not to overfitting to validation; Step 8 looks at this. The weak 5%-data model is only 2.5
 points below the baseline on validation, so the gate is catching a small regression, not an obvious failure.
@@ -243,7 +245,7 @@ Saved test probabilities are reused after a spot check against the live register
 100% agreement). The blend and the per-class bias tuning were not taken forward: the blend added +0.005 macro-F1,
 and the bias tuning was tuned for macro-F1 and adds only +0.002 weighted F1.
 
-**Refinement run**: v4 = v3 plus 26 per-class offsets on the scores, tuned for weighted F1 on the
+**Refinement run** (26 classes): v4 = v3 plus 26 per-class offsets on the scores, tuned for weighted F1 on the
 **validation** split only (5-fold cross-fitted validation gain +0.008; a chronological check, tuned on the older
 half and scored on the newer half, +0.010). Gated against champion v3 with `--require-improvement`, which
 adds a rule that the lower bound of the difference must be above zero:
@@ -263,7 +265,7 @@ The lowest class recall (0.101) is right at the floor, so the next change that l
 
 Where the remaining error is: about 17-23% of validation complaints have a templated near-duplicate in train
 (99% credit reporting) and LoRA already gets 0.83-0.86 accuracy on them, the same as copying the sibling's
-label. On the other complaints accuracy is about 0.59-0.60, which is where any further gain has to come from.
+label. On the other complaints (26 classes) accuracy is about 0.59-0.60, which is where any further gain has to come from.
 
 ### Drift (Step 8)
 `python -m complaintops.drift` compares batches of complaints with a reference (a random 70% of the validation
@@ -288,7 +290,7 @@ Signals and thresholds (the usual rules of thumb, not tuned on these batches):
 Reading it: the normal batch raises nothing. The real later month is caught by the text classifier (the
 wording has changed, AUC 0.75) and the model is visibly less sure (confidence 0.72 -> 0.66), even though the
 class mix and the simple text statistics barely moved; Evidently's tabular columns alone (43%) would not have
-fired. This is the drift behind the test split being harder than validation (weighted F1 0.64 vs 0.59 for the
+fired. This is the drift behind the test split being harder than validation (weighted F1 on the 26 classes, 0.64 vs 0.59 for the
 champion). The artificially shifted class mix fires on several signals at once.
 `tests/test_drift.py` checks all of this: on synthetic data (new wording, new class mix and lost confidence each
 fire; same-distribution data stays quiet) and on the real batches (skipped if the model outputs are missing).
@@ -298,10 +300,10 @@ Evidently 0.7.x does not import under pandas 3, so pandas is pinned below 3.
 The champion's LoRA adapter is merged into DistilBERT (`merge_and_unload()`), exported to ONNX and quantized to
 int8 (`python -m complaintops.export_onnx`); `python -m complaintops.benchmark_serving` measures it. Latency is
 end to end (tokenizing + model) on CPU for 500 validation complaints, one complaint per request and batches of
-16, with 2 threads (about what a small free host gives). Quality is weighted F1 on 3,000 validation complaints,
+16, with 2 threads (about what a small free host gives). Quality is weighted F1 (26-class model) on 3,000 validation complaints,
 with the champion's per-class offsets applied to every variant.
 
-| Variant | Size (MB) | Batch 1 p50 / p95 (ms) | Batch 16 p50 / p95 (ms) | Weighted F1 | Same class as PyTorch fp32 |
+| Variant | Size (MB) | Batch 1 p50 / p95 (ms) | Batch 16 p50 / p95 (ms) | Weighted F1 (26 classes) | Same class as PyTorch fp32 |
 |---|---|---|---|---|---|
 | PyTorch fp32 | 268 | 167 / 218 | 3073 / 3159 | 0.6689 | 100% |
 | ONNX fp32 | 268 | 97 / 134 | 2260 / 2322 | 0.6689 | 100% |
@@ -313,7 +315,7 @@ With the default thread count (6 cores) one complaint takes p50 / p95: PyTorch 1
 **Recommendation: serve ONNX int8.** It is 4x smaller and 1.8x (2 threads) to 3x (6 cores) faster than PyTorch
 at a cost of 0.003 weighted F1, which is within the noise of a 3,000-row sample, though it changes 7.6% of
 individual predictions. The F1 column is only for comparing variants: the offsets were tuned on validation, so
-it is not the model's score (test weighted F1 0.587, see the gate).
+it is not the model's score (held-out test weighted F1 0.587 on the 26 classes, 0.817 on the 24 served classes).
 
 Notes: the first export was wrong (logits off by up to 1.98 even though the classes matched) because the
 library builds its padding mask with Python control flow that the exporter freezes at the sample length; the

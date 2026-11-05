@@ -248,7 +248,7 @@
     return h("div", { class: "card gate" },
       h("span", { class: "state " + (g.passed ? "pass" : "fail") }, g.passed ? "✓ PROMOTED" : "✕ BLOCKED"),
       h("h3", { text: title }), h("p", { class: "sub", text: sub }),
-      h("p", { class: "nums" }, "Test weighted F1 ", h("b", { text: f3(c) }), " → ", h("b", { text: f3(d) }), ". Difference ", h("b", { text: sgn(df.point) }), ", 95% interval ", sgn(df.ci95[0]), " to ", sgn(df.ci95[1])),
+      h("p", { class: "nums" }, "Test weighted F1 (26 classes) ", h("b", { text: f3(c) }), " → ", h("b", { text: f3(d) }), ". Difference ", h("b", { text: sgn(df.point) }), ", 95% interval ", sgn(df.ci95[0]), " to ", sgn(df.ci95[1])),
       h("ul", { class: "checks" }, g.checks.map(function (k) {
         return h("li", {}, h("span", { class: "tag " + (k.passed ? "pass" : "fail"), text: k.passed ? "✓ PASS" : "✕ FAIL" }),
           h("div", {}, h("div", { class: "nm", text: CHECK_NAMES[k.name] || k.name }), h("div", { class: "dt", text: prettyDetail(k.name, k.detail) })));
