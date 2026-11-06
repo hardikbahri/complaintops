@@ -89,7 +89,10 @@ def scored_frames():
     """Validation and test rows with text statistics and the champion's confidence / predicted class."""
     from complaintops.lora_model import apply_bias
 
-    classes = np.array(json.load(open("data/lora_colab/classes.json")))
+    from complaintops.taxonomy import merge_proba, merged_classes
+
+    full = json.load(open("data/lora_colab/classes.json"))
+    classes = np.array(merged_classes(full))  # the 24 served classes: the monitor watches what users see
     bias = json.load(open("results/lora_bias_weighted.json"))["bias"]  # offsets baked into champion v4
     val = pd.read_parquet("data/processed/val.parquet").reset_index(drop=True)
     test = pd.read_parquet("data/processed/test.parquet").reset_index(drop=True)
@@ -97,7 +100,7 @@ def scored_frames():
              "test": np.load("data/lora_colab/proba_test_bias.npy")}
     out = {}
     for name, df in (("val", val), ("test", test)):
-        p = proba[name]
+        p = merge_proba(proba[name], full)
         df["conf"] = p.max(1)
         df["pred"] = classes[p.argmax(1)]
         df[FEATURE_COLUMNS] = build_features(df).to_numpy()

@@ -81,16 +81,16 @@
   },
   "quality": {
     "PyTorch fp32": {
-      "weighted_f1": 0.6688902024232415,
+      "weighted_f1": 0.8604759588723713,
       "agreement_with_pytorch": 1.0
     },
     "ONNX fp32": {
-      "weighted_f1": 0.6688902024232415,
+      "weighted_f1": 0.8604759588723713,
       "agreement_with_pytorch": 1.0
     },
     "ONNX int8": {
-      "weighted_f1": 0.6661846335526298,
-      "agreement_with_pytorch": 0.9236666666666666
+      "weighted_f1": 0.856338129125127,
+      "agreement_with_pytorch": 0.967
     }
   },
   "n_latency": 500,

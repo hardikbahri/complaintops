@@ -20,6 +20,8 @@
       <a href="#results">Results</a>
       <a href="#safety">Safety checks</a>
       <a href="#agent">The agent</a>
+      <a href="#search">Vector search</a>
+      <a href="#llm">The LLM</a>
       <a href="#speed">Speed</a>
       <a href="#lessons">Lessons</a>
     </nav>
@@ -32,7 +34,7 @@
   <section class="hero wrap">
     <p class="eyebrow">Portfolio project · end-to-end machine learning</p>
     <h1>Triage consumer complaints, and know when <em>not</em> to trust the model.</h1>
-    <p class="lede">A fine-tuned DistilBERT sorts 335,000 real CFPB complaints into 24 product and issue classes. When it is unsure, an agent looks up similar past complaints, has an LLM write a short note, and sends the case to a human reviewer with the likely labels. Every model change passes an automated evaluation gate.</p>
+    <p class="lede">A fine-tuned DistilBERT sorts 335,000 real CFPB complaints into 24 product and issue classes. When it is unsure, an agent searches a vector database of 50,000 past complaints for the most similar ones, has an LLM write a short note, and sends the case to a human reviewer with the likely labels. Every model change passes an automated evaluation gate.</p>
     <div class="cta">
       <a class="btn primary" href="#demo">Try it live</a>
       <a class="btn" href="#results">See the evidence</a>
@@ -45,6 +47,7 @@
     <div class="sec-head">
       <h2>Live demo</h2>
       <p>Paste a complaint and watch the real agent decide. It trusts the classifier when it is confident, and otherwise looks for similar cases, has an LLM write a note, and queues the case for a human reviewer.</p>
+      <p class="static-note" id="static-note" hidden>This public copy has no live backend. The examples replay real runs of the agent that I recorded; to try your own complaint, run the project locally (see the README).</p>
     </div>
     <div class="card demo">
       <form id="demo-form" autocomplete="off">
@@ -78,17 +81,16 @@
   <section id="results" class="wrap section">
     <div class="sec-head">
       <h2>Results, honestly reported</h2>
-      <p>Complaints are split by <strong>date</strong>: train on the past, tune on a later period, and score the finalists on the newest complaints. Weighted F1 is the headline metric (each class counts in proportion to its size); macro-F1 sits next to it in the table views. Scores on 24 and on 26 classes are not comparable, so every chart says which it uses.</p>
+      <p>Complaints are split by <strong>date</strong>: train on the past, tune on a later period, and score the finalists on the newest complaints. Weighted F1 is the headline metric (each class counts in proportion to its size); macro-F1 sits next to it in the table views. Every score on this page is for the 24 served classes.</p>
     </div>
     <div class="grid two" id="results-grid"></div>
-    <div class="callout" id="why-not-higher"></div>
   </section>
 
   <!-- SAFETY -->
   <section id="safety" class="wrap section">
     <div class="sec-head">
       <h2>The evaluation gate</h2>
-      <p>A new model replaces the champion only if it passes three automated checks on the held-out test set. The gate runs on the model's original 26-class outputs; the 24 served classes are a fixed merge of them. To prove the gate works, a deliberately weaker model was blocked and the real candidates were promoted.</p>
+      <p>A new model replaces the champion only if it passes three automated checks on the held-out test set. It runs on the 24 served classes. To prove the gate works, a deliberately weaker model was blocked; the other two comparisons show what it does with real candidates.</p>
     </div>
     <div class="grid three" id="gates"></div>
   </section>
@@ -100,6 +102,24 @@
       <p>A classifier's confidence is only useful if it means something. This checks it on validation complaints, which the model never trained on, and sets the agent's threshold from the data.</p>
     </div>
     <div class="grid two" id="agent-grid"></div>
+  </section>
+
+  <!-- VECTOR SEARCH -->
+  <section id="search" class="wrap section">
+    <div class="sec-head">
+      <h2>Finding similar past complaints</h2>
+      <p>The agent's second step is a search over a vector database. Each stored complaint is turned into a list of numbers that captures its meaning, so a new complaint can be matched to the ones that say about the same thing, even in different words.</p>
+    </div>
+    <div class="grid two" id="search-grid"></div>
+  </section>
+
+  <!-- LLM -->
+  <section id="llm" class="wrap section">
+    <div class="sec-head">
+      <h2>Where the LLM is used, and where it is not</h2>
+      <p>The LLM is a writer, not a judge. I tested it as the judge first; the measurement is in the agent section above, and it is why the job changed.</p>
+    </div>
+    <div class="grid two" id="llm-grid"></div>
   </section>
 
   <!-- DRIFT -->

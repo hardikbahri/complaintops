@@ -7,6 +7,7 @@ variant. Validation only. Needs data/onnx/ from export_onnx.py.
 Run from the project root:  python -m complaintops.benchmark_serving
 """
 import json
+import sys
 import time
 from pathlib import Path
 
@@ -17,6 +18,7 @@ import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 from complaintops.evaluate import weighted_f1
+from complaintops.taxonomy import merge_label, merge_proba, merged_classes
 
 ONNX = Path("data/onnx")
 MAX_LEN = 256
@@ -67,15 +69,16 @@ def latency(run, texts, batch):
                 n_batches=len(times))
 
 
-def quality(run, texts, y, bias, k):
+def quality(run, texts, y, bias, k, full_classes):
     """Weighted F1 (offsets applied) and the predictions, in the original order."""
     order = np.argsort([len(t) for t in texts])  # sorted by length: far less padding, same results
     logits = np.zeros((len(texts), k), dtype="float32")
     for i in range(0, len(texts), 32):
         j = order[i:i + 32]
         logits[j] = run([texts[x] for x in j])
-    pred = (logits + bias).argmax(1)
-    return weighted_f1(y, pred, k), pred
+    z = np.exp((logits + bias) - (logits + bias).max(1, keepdims=True))
+    pred = merge_proba(z / z.sum(1, keepdims=True), full_classes).argmax(1)  # the 24 served classes
+    return weighted_f1(y, pred, len(merged_classes(full_classes))), pred
 
 
 def main():
@@ -86,15 +89,17 @@ def main():
     classes = json.load(open(ONNX / "classes.json"))
     bias = np.array(json.load(open(ONNX / "bias.json"))["bias"], dtype="float32")
     va = pd.read_parquet("data/processed/val.parquet")
-    y_all = va["label"].map({c: i for i, c in enumerate(classes)}).to_numpy()
+    served = merged_classes(classes)
+    y_all = va["label"].map(lambda s: served.index(merge_label(s))).to_numpy()
     rng = np.random.default_rng(7)
     lat_idx = rng.choice(len(va), N_LATENCY, replace=False)
     qual_idx = rng.choice(len(va), N_QUALITY, replace=False)
     lat_texts = va["narrative"].iloc[lat_idx].tolist()
     q_texts, q_y = va["narrative"].iloc[qual_idx].tolist(), y_all[qual_idx]
 
-    results = {}
-    for label, threads in (("2 threads", 2), ("default threads", None)):
+    quality_only = "--quality-only" in sys.argv  # keep the saved timings, redo only the F1 comparison
+    results = json.load(open("results/serving_benchmark.json"))["latency"] if quality_only else {}
+    for label, threads in (() if quality_only else (("2 threads", 2), ("default threads", None))):
         runners, sizes = build_runners(threads)
         print(f"\n=== latency, {label} ===", flush=True)
         for name, run in runners.items():
@@ -110,7 +115,7 @@ def main():
     runners, _ = build_runners(None)
     quality_res, preds = {}, {}
     for name, run in runners.items():
-        wf1, preds[name] = quality(run, q_texts, q_y, bias, len(classes))
+        wf1, preds[name] = quality(run, q_texts, q_y, bias, len(classes), classes)
         quality_res[name] = wf1
     for name in runners:
         agree = float((preds[name] == preds["PyTorch fp32"]).mean())
@@ -120,6 +125,8 @@ def main():
     out = dict(latency=results, quality=quality_res, n_latency=N_LATENCY, n_quality=N_QUALITY)
     Path("results").mkdir(exist_ok=True)
     json.dump(out, open("results/serving_benchmark.json", "w"), indent=2)
+    if quality_only:
+        return
 
     mlflow.set_tracking_uri(TRACKING_URI)
     mlflow.set_experiment(EXPERIMENT)

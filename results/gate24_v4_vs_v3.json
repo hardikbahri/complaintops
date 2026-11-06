@@ -1,0 +1,47 @@
+{
+  "champion": {
+    "weighted_f1": 0.8088232898396649,
+    "ci95": [
+      0.8052594448876563,
+      0.8125524034601793
+    ]
+  },
+  "candidate": {
+    "weighted_f1": 0.8172948504321452,
+    "ci95": [
+      0.8138344510721897,
+      0.8209850492286885
+    ]
+  },
+  "difference": {
+    "point": 0.008471560592480332,
+    "ci95": [
+      0.0064417557484219125,
+      0.010493280231864821
+    ]
+  },
+  "checks": [
+    {
+      "name": "lower bound of the difference",
+      "passed": true,
+      "detail": "95% lower bound of (candidate - champion) = +0.0064 must be >= -0.005"
+    },
+    {
+      "name": "must clearly improve",
+      "passed": true,
+      "detail": "95% lower bound of the difference +0.0064 must be > 0"
+    },
+    {
+      "name": "class recall floor",
+      "passed": false,
+      "detail": "lowest class recall 0.095 (floor 0.1); below floor: [('Debt collection | Written notification about debt', 0.09537037037037037)]"
+    },
+    {
+      "name": "golden set",
+      "passed": true,
+      "detail": "40/40 golden cases kept; regressions at rows []"
+    }
+  ],
+  "passed": false,
+  "n_boot": 1000
+}

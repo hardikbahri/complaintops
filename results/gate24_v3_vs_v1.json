@@ -1,0 +1,42 @@
+{
+  "champion": {
+    "weighted_f1": 0.7762621345517742,
+    "ci95": [
+      0.772368159975157,
+      0.7799101830705618
+    ]
+  },
+  "candidate": {
+    "weighted_f1": 0.8088232898396649,
+    "ci95": [
+      0.8052594448876563,
+      0.8125524034601793
+    ]
+  },
+  "difference": {
+    "point": 0.03256115528789072,
+    "ci95": [
+      0.029795371262833582,
+      0.03507355061642745
+    ]
+  },
+  "checks": [
+    {
+      "name": "lower bound of the difference",
+      "passed": true,
+      "detail": "95% lower bound of (candidate - champion) = +0.0298 must be >= -0.005"
+    },
+    {
+      "name": "class recall floor",
+      "passed": true,
+      "detail": "lowest class recall 0.129 (floor 0.1); no class below floor"
+    },
+    {
+      "name": "golden set",
+      "passed": true,
+      "detail": "40/40 golden cases kept; regressions at rows []"
+    }
+  ],
+  "passed": true,
+  "n_boot": 1000
+}

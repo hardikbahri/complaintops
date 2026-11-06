@@ -1,0 +1,7 @@
+champion  weighted F1 0.7763  95% CI [0.7724, 0.7799]
+candidate weighted F1 0.7570  95% CI [0.7527, 0.7613]
+difference -0.0193  95% CI [-0.0220, -0.0166]  (1000 paired bootstrap resamples)
+  [FAIL] lower bound of the difference: 95% lower bound of (candidate - champion) = -0.0220 must be >= -0.005
+  [FAIL] class recall floor: lowest class recall 0.062 (floor 0.1); below floor: [('Debt collection | Written notification about debt', 0.062037037037037036)]
+  [FAIL] golden set: 32/40 golden cases kept; regressions at rows [6, 12, 13, 16, 23, 35, 37, 39]
+GATE: BLOCKED
