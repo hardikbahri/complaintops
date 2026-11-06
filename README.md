@@ -1,5 +1,7 @@
 # ComplaintOps
 
+[![CI](https://github.com/hardikbahri/complaintops/actions/workflows/ci.yml/badge.svg)](https://github.com/hardikbahri/complaintops/actions/workflows/ci.yml) [Live page (recorded demo)](https://hb-007-complaintops.static.hf.space/)
+
 Complaint triage platform: train, track, gate, monitor and serve models, then put an agent in front of them.
 
 Status: Milestone 1 (model side) done; Milestone 2 (agent) in progress: classifier API, similar-complaint search,
