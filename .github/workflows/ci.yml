@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install the locked dependencies
+        run: uv sync --frozen
+
+      # The agent's rules, run on its own so a failure is easy to spot: confident complaints skip the LLM, unsure ones
+      # are flagged for a person, the LLM never sets the label (including a planted instruction), a failing LLM falls
+      # back to a template note. Uses a stub tool server, so it needs no model, database or API key.
+      - name: Agent behaviour checks
+        run: uv run pytest tests/test_agent_rules.py -v
+
+      # Everything else. Tests that need the 67 MB model, the search index or Postgres (none are in git) skip themselves.
+      # This includes the gate's rules (tests/test_gate.py), the label merge, the API contract and the web page checks.
+      - name: Full test suite
+        run: uv run pytest -q -rs

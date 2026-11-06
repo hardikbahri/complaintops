@@ -51,13 +51,14 @@ def _payload(result):
 
 
 class ComplaintAgent:
-    def __init__(self, llm=None, threshold=THRESHOLD):
+    def __init__(self, llm=None, threshold=THRESHOLD, server_module="complaintops.mcp_server"):
         self.llm = llm or get_llm()
         self.threshold = threshold
+        self.server_module = server_module  # tests point this at a stub tool server
         self.graph = self._build()
 
     async def __aenter__(self):
-        params = StdioServerParameters(command=sys.executable, args=["-m", "complaintops.mcp_server"],
+        params = StdioServerParameters(command=sys.executable, args=["-m", self.server_module],
                                        env={**os.environ})
         self._client_cm = Client(params)
         self.client = await self._client_cm.__aenter__()
