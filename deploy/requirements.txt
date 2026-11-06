@@ -1,0 +1,11 @@
+# The slim set the hosted container needs (no PyTorch, no database driver). Versions match the tested environment.
+fastapi==0.162.0
+uvicorn==0.54.0
+pydantic==2.14.2
+onnxruntime==1.31.1
+tokenizers==0.23.3
+numpy==2.4.6
+mcp==2.3.0
+langgraph==1.2.19
+openai==3.45.0
+fastembed==0.9.1

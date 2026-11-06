@@ -20,6 +20,12 @@ ONNX_DIR = Path("data/onnx")
 MAX_LEN = 256
 
 
+def class_list(onnx_dir=ONNX_DIR, taxonomy=None):
+    """The classes the model predicts, without loading the model."""
+    full = json.load(open(Path(onnx_dir) / "classes.json"))
+    return merged_classes(full) if (taxonomy or os.environ.get("TAXONOMY", "merged")) == "merged" else full
+
+
 class Classifier:
     def __init__(self, model="model_int8.onnx", onnx_dir=ONNX_DIR, threads=None, taxonomy=None):
         """taxonomy: "merged" (24 classes, the default) or "full" (the 26 original classes); env TAXONOMY sets it."""
@@ -32,6 +38,8 @@ class Classifier:
         self.classes = merged_classes(self.full_classes) if self.merged else self.full_classes
         self.bias = np.array(json.load(open(onnx_dir / "bias.json"))["bias"], dtype="float32")
         opts = ort.SessionOptions()
+        opts.enable_cpu_mem_arena = False  # a little slower, a lot less memory held between requests
+        opts.enable_mem_pattern = False
         if threads:
             opts.intra_op_num_threads = threads
         self.session = ort.InferenceSession(str(onnx_dir / model), opts, providers=["CPUExecutionProvider"])

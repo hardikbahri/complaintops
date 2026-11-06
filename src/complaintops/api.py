@@ -17,7 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 
 from complaintops.config import load_env
-from complaintops.serve_onnx import Classifier
+from complaintops.serve_onnx import ONNX_DIR, Classifier, class_list
 from complaintops.tracing import configured as tracing_configured
 
 MODEL_NAME = os.environ.get("MODEL_NAME", "complaint-classifier v4 (DistilBERT + LoRA, ONNX int8)")
@@ -97,10 +97,26 @@ class RateLimiter:
         self.day.append(now)
 
 
+class LazyClassifier:
+    """The model for /predict, loaded on first use. /triage classifies in the MCP tool server's own process, so a server
+    that only runs the page and the agent never pays for a second copy (about 100 MB)."""
+
+    def __init__(self):
+        if not (ONNX_DIR / "model_int8.onnx").exists():
+            raise FileNotFoundError(f"{ONNX_DIR / 'model_int8.onnx'} is missing: run export_onnx first")  # fail at start-up
+        self.classes = class_list()
+        self._clf = None
+
+    def predict(self, texts, **kw):
+        if self._clf is None:
+            self._clf = Classifier()
+        return self._clf.predict(texts, **kw)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     load_env()  # a local .env supplies the LLM key; real environment variables always win
-    app.state.clf = Classifier()  # fails loudly at start-up if data/onnx/ is missing
+    app.state.clf = LazyClassifier()  # fails loudly at start-up if data/onnx/ is missing
     app.state.agent, app.state.agent_error = None, None
     app.state.limiter = RateLimiter(int(os.environ.get("RATE_PER_MINUTE", 8)), int(os.environ.get("RATE_PER_DAY", 400)))
     app.state.slots = asyncio.Semaphore(2)  # at most two agent runs at once

@@ -32,9 +32,15 @@ def warm_up():
     except Exception:
         pass
     try:
-        from complaintops.vector_store import embed
+        if os.environ.get("SEARCH_BACKEND", "pgvector") == "memory":
+            from complaintops.search_index import embed_query, get_index
 
-        embed(["warm up"])
+            get_index()
+            embed_query("warm up")
+        else:
+            from complaintops.vector_store import embed
+
+            embed(["warm up"])
     except Exception:
         pass
 
@@ -61,7 +67,10 @@ def classify_complaint(text: str) -> dict:
 
 def search_similar_complaints(text: str, k: int = 5, product: str | None = None) -> dict:
     """Find the most similar past complaints (with their labels), optionally within one product."""
-    from complaintops.vector_store import search
+    if os.environ.get("SEARCH_BACKEND", "pgvector") == "memory":  # hosts without Postgres
+        from complaintops.search_index import search
+    else:
+        from complaintops.vector_store import search
 
     k = max(1, min(int(k), MAX_K))
     return {"results": search(_check_text(text), k=k, product=product or None)}

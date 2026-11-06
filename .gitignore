@@ -29,3 +29,6 @@ results/xgb_model.json
 
 # Evidently HTML reports are large and regenerable
 results/drift/*.html
+
+# deployment bundle (rebuilt by deploy/build_space.py)
+build/

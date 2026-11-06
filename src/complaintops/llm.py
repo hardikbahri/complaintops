@@ -143,6 +143,19 @@ def build_summary_prompt(complaint, suggestions, similar):
             'Reply as JSON: {"summary": "<the note>"}')
 
 
+MAX_NOTE = 700
+
+
+def trim_note(text, limit=MAX_NOTE):
+    """Collapse whitespace and cap the length, cutting at a sentence end when there is one (never mid-sentence)."""
+    text = " ".join(text.split())
+    if len(text) <= limit:
+        return text
+    cut = text[:limit]
+    end = max(cut.rfind(". "), cut.rfind("? "), cut.rfind("! "), cut.rfind('."'))
+    return cut[:end + 1] if end > limit // 3 else cut.rstrip() + "\u2026"
+
+
 def summarise_case(llm, complaint, suggestions, similar=()):
     """A short note for the reviewer. Returns {summary, ok, model, reply, error}; the caller falls back to a template."""
     out = {"summary": None, "ok": False, "model": llm.name, "reply": None, "error": None}
@@ -155,5 +168,5 @@ def summarise_case(llm, complaint, suggestions, similar=()):
     obj = parse_json(reply)
     text = obj.get("summary") if isinstance(obj, dict) else None
     if isinstance(text, str) and text.strip():
-        out["summary"], out["ok"] = " ".join(text.split())[:600], True  # plain text, shown as text, length-capped
+        out["summary"], out["ok"] = trim_note(text), True  # plain text, shown as text, length-capped
     return out

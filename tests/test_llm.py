@@ -86,7 +86,10 @@ def test_a_note_is_plain_trimmed_text():
     d = summarise_case(MockLLM([json.dumps({"summary": messy})]), "t", SUGGESTIONS)
     assert d["ok"] and d["summary"] == "A fee dispute. Check the balance."
     long = summarise_case(MockLLM([json.dumps({"summary": "x" * 5000})]), "t", SUGGESTIONS)
-    assert len(long["summary"]) == 600
+    assert len(long["summary"]) <= 701 and long["summary"].endswith("\u2026")  # no sentence end to cut at
+    sentences = " ".join(f"This is sentence number {i}." for i in range(100))
+    cut = summarise_case(MockLLM([json.dumps({"summary": sentences})]), "t", SUGGESTIONS)["summary"]
+    assert len(cut) <= 700 and cut.endswith(".") and cut.count("sentence number") >= 10  # cut at a full stop
 
 
 @pytest.mark.parametrize("llm_reply", ["not json", json.dumps({"label": "Other"}), json.dumps({"summary": ""}),
