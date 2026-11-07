@@ -54,12 +54,13 @@ Consumer-complaint triage: a fine-tuned classifier, an evaluation gate, drift mo
 
 ## Hosting
 - **Static copy (free, live):** https://hb-007-complaintops.static.hf.space/. Five files; the demo replays four real recorded agent runs and says so. Built by `deploy/build_static.py`.
+- **Kubernetes (local):** `deploy/k8s/` has manifests (health probes, resource limits, non-root user) and a kind cluster config. Run on a real kind cluster: ready in seconds, and a deleted pod was replaced and serving again after 24 s. Local demo only, not production. See `deploy/k8s/README.md`.
 - **Live container:** `deploy/build_space.py` builds a 310 MB image (API, page, int8 model, in-memory search index, no PyTorch or database). It starts in about 8 s and uses about 580 MB. Hugging Face now charges for Docker Spaces, so it is not hosted. See `deploy/README.md`.
 
 ## Tests and CI
-- 110 tests locally. GitHub Actions (`.github/workflows/ci.yml`) runs on every push: install, then the agent behaviour checks as their own step, then the full suite.
+- 116 tests locally. GitHub Actions (`.github/workflows/ci.yml`) runs on every push: install, then the agent behaviour checks as their own step, then the full suite.
 - Agent checks (`tests/test_agent_rules.py`) run the real agent against a stub tool server and a scripted LLM, so they need no model, database or key. They check: confident complaints never call the LLM; unsure ones are flagged for a person; the LLM never sets the label, even with a planted instruction; a failing LLM falls back to a template note. Forcing the router to accept everything makes 10 of the 11 fail.
-- On a fresh checkout 70 tests pass and 40 skip (they need the model, the search index or Postgres, none of which are in git). The gate's rules are tested on synthetic predictions; the gate itself runs locally.
+- On a fresh checkout 76 tests pass and 40 skip (they need the model, the search index or Postgres, none of which are in git). The gate's rules are tested on synthetic predictions; the gate itself runs locally.
 
 ## Run it
 ```

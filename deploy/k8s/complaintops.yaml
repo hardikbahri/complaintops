@@ -1,0 +1,71 @@
+# The ComplaintOps API, page and agent as one Deployment plus a Service. Image: deploy/Dockerfile (built from build/space).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: complaintops
+  labels:
+    app: complaintops
+spec:
+  replicas: 1          # one is enough for a demo; the tool-server subprocess and the review queue are per pod
+  selector:
+    matchLabels:
+      app: complaintops
+  template:
+    metadata:
+      labels:
+        app: complaintops
+    spec:
+      containers:
+        - name: api
+          image: complaintops-space:latest
+          imagePullPolicy: IfNotPresent      # the image is loaded into kind, not pulled from a registry
+          ports:
+            - containerPort: 7860
+          env:
+            - name: LLM_PROVIDER
+              value: mock                    # set to groq and add the secret below for real reviewer notes
+            - name: GROQ_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: complaintops-llm
+                  key: GROQ_API_KEY
+                  optional: true             # runs without the secret, using the mock LLM
+          startupProbe:                      # models load in the background; allow up to a minute
+            httpGet: {path: /health, port: 7860}
+            periodSeconds: 2
+            failureThreshold: 30
+          readinessProbe:                    # take the pod out of the Service if the app says it is not ready
+            httpGet: {path: /ready, port: 7860}
+            periodSeconds: 10
+          livenessProbe:                     # restart the container if it stops answering
+            httpGet: {path: /health, port: 7860}
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 250m
+              memory: 600Mi                  # measured: about 580 MB in use
+            limits:
+              cpu: "2"
+              memory: 900Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: complaintops
+  labels:
+    app: complaintops
+spec:
+  type: NodePort
+  selector:
+    app: complaintops
+  ports:
+    - port: 80
+      targetPort: 7860
+      nodePort: 30080                        # published on localhost:8080 by kind-cluster.yaml
