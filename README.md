@@ -1,6 +1,6 @@
 # ComplaintOps
 
-[![CI](https://github.com/hardikbahri/complaintops/actions/workflows/ci.yml/badge.svg)](https://github.com/hardikbahri/complaintops/actions/workflows/ci.yml) [Live page (recorded demo)](https://hb-007-complaintops.static.hf.space/) | [Model on Hugging Face](https://huggingface.co/hb-007/complaintops-distilbert-lora-onnx) | [Write-up: the LLM experiment](https://hardikbahri.github.io/writing/llm-confidence/)
+[![CI](https://github.com/hardikbahri/complaintops/actions/workflows/ci.yml/badge.svg)](https://github.com/hardikbahri/complaintops/actions/workflows/ci.yml) [Live page (recorded demo)](https://hb-007-complaintops.static.hf.space/) | [Model on Hugging Face](https://huggingface.co/hb-007/complaintops-distilbert-lora-onnx) | [Write-up: the LLM experiment](https://medium.com/@hardik.bahri/my-llm-was-confident-99-of-the-time-it-was-right-39-of-the-time-84c6fc2e34f3)
 
 Consumer-complaint triage: a fine-tuned classifier, an evaluation gate, drift monitoring, and an agent that sends unsure cases to a human.
 
@@ -39,7 +39,7 @@ Consumer-complaint triage: a fine-tuned classifier, an evaluation gate, drift mo
 - 76 of the 150 calls returned a usable answer. The other 74 failed (61 hit the free tier's rate limit, 13 replies could not be parsed); the LLM never declined.
 - On those 76: LLM right 39% (30), classifier right 43% (33) on the same complaints. Where they disagreed: classifier right 12 times, LLM 9 (sign test p = 0.66).
 - The LLM called itself high-confidence on 99% of answers, so its confidence says nothing about when to trust it.
-- Full write-up: [My LLM was confident 99% of the time. It was right 39% of the time.](https://hardikbahri.github.io/writing/llm-confidence/)
+- Full write-up: [My LLM was confident 99% of the time. It was right 39% of the time.](https://medium.com/@hardik.bahri/my-llm-was-confident-99-of-the-time-it-was-right-39-of-the-time-84c6fc2e34f3)
 - I did not rerun with retries, so this is a smaller test than planned, and the 13 unreadable replies could be biased toward harder complaints.
 
 ## Evaluation gate
