@@ -1,6 +1,6 @@
 # ComplaintOps
 
-[![CI](https://github.com/hardikbahri/complaintops/actions/workflows/ci.yml/badge.svg)](https://github.com/hardikbahri/complaintops/actions/workflows/ci.yml) [Live page (recorded demo)](https://hb-007-complaintops.static.hf.space/)
+[![CI](https://github.com/hardikbahri/complaintops/actions/workflows/ci.yml/badge.svg)](https://github.com/hardikbahri/complaintops/actions/workflows/ci.yml) [Live page (recorded demo)](https://hb-007-complaintops.static.hf.space/) | [Model on Hugging Face](https://huggingface.co/hb-007/complaintops-distilbert-lora-onnx)
 
 Consumer-complaint triage: a fine-tuned classifier, an evaluation gate, drift monitoring, and an agent that sends unsure cases to a human.
 
